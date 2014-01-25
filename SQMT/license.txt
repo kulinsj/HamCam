@@ -1,0 +1,41 @@
+FDM_v1.0.zip -- Face Detection for Matlab
+
+  2006-09-28
+
+  Copyright (C) 2006 Mikael Nilsson
+
+  This software is provided 'as-is', without any express or implied
+  warranty.  In no event will the authors be held liable for any damages
+  arising from the use of this software.
+
+  Permission is granted to anyone to use this software for academic test purpose 
+  and to alter it and redistribute it freely, subject to the following restrictions:
+
+  1. The origin of this software must not be misrepresented; you must not
+     claim that you wrote the original software. 
+  2. Altered source versions must be plainly marked as such, and must not be
+     misrepresented as being the original software.
+  3. This notice may not be removed or altered from any source distribution.
+  4. Commercial use of the software is prohibited. 
+  5. You are free to use the software for research purposes. 
+     If this software is used to produce results for a research paper make a  
+     citation to the following paper:
+
+@inproceedings{nilsson07face,
+    author =    {Nilsson, M. and Nordberg, J. and Claesson, I.},
+    title =     {Face Detection using Local SMQT Features and Split Up SNoW Classifier},
+    booktitle = {IEEE International Conference on Acoustics, Speech, and Signal Processing (ICASSP)},
+    pages =     {<< to be updated >>},
+    volume =    {<< to be updated >>},
+    month  =    {<< to be updated >>},
+    year =      {2007},
+}
+
+  
+  Mikael Nilsson, Mikael.Nilsson@bth.se
+  Ph.D. Candidate
+  Blekinge Institute of Technology
+  School of Engineering
+  Department of Signal Processing
+  372 25 Ronneby, Sweden 
+  

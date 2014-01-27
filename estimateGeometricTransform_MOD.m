@@ -1,6 +1,6 @@
-function [tform, inlier_points1, inlier_points2, newTrackedPoint, status] ...
+function [tform, inlier_points1, inlier_points2, newTrackedPoints, status] ...
     = estimateGeometricTransform_MOD(matched_points1, matched_points2, ...
-    TrackedPoint, transform_type, varargin)
+    TrackedPoints, transform_type, varargin)
 %estimateGeometricTransform Estimate geometric transformation from matching point pairs.
 %   TFORM = estimateGeometricTransform(MATCHED_POINTS1,MATCHED_POINTS2,
 %   TRANSFORM_TYPE) returns a 2-D geometric transform which maps the
@@ -119,7 +119,7 @@ statusCode = struct(...
 % Parse and check inputs
 [points1,points2,sampleSize,maxNumTrials,confidence,threshold,status] ...
     = parseInputs(statusCode, matched_points1, matched_points2, ...
-        TrackedPoint, transform_type, varargin{:});
+        TrackedPoints, transform_type, varargin{:});
     
 classToUse = getClassToUse(points1, points2);
 
@@ -138,16 +138,27 @@ end
 if status == statusCode.NoError
     inlier_points1 = matched_points1(inliers, :);
     inlier_points2 = matched_points2(inliers, :);
-
-    if(TrackedPoint == find(outliers == 1))
-        newTrackedPoint = -1;
-    else
-        count = sum(outliers(1:TrackedPoint));
-        if count > 0
-            count
+    
+    %adjust indecies of tracked points based on removed outliers
+    currentNumTrackedPoints = size(TrackedPoints);
+    lossSoFar = 0;
+    newTrackedPoints = zeros(currentNumTrackedPoints(1),1);
+    for i = 1:currentNumTrackedPoints(1)
+        if i == 1
+            os = outliers(1:TrackedPoints(1));
+        else
+            os = outliers((TrackedPoints(i-1)-1):TrackedPoints(i));
         end
-        newTrackedPoint = TrackedPoint - count;
+        thisOSOutliers = sum(os(:));
+        lossSoFar = lossSoFar+thisOSOutliers;
+        if outliers(TrackedPoints(i))==1
+            fprintf('point lost\n');
+            newTrackedPoints(i) = -1;
+        else
+            newTrackedPoints(i) = TrackedPoints(i) - lossSoFar;
+        end
     end
+    
 else
     inlier_points1 = matched_points1([]);
     inlier_points2 = matched_points2([]);
@@ -187,7 +198,7 @@ coder.internal.errorIf(status==statusCode.NotEnoughInliers, ...
 function [points1, points2, sampleSize, maxNumTrials, confidence, ...
     maxDistance, status] ...
     = parseInputs(statusCode, matched_points1, matched_points2, ...
-    TrackedPoint, transform_type, varargin)
+    TrackedPoints, transform_type, varargin)
 
 isSimulationMode = isempty(coder.target);
 if isSimulationMode

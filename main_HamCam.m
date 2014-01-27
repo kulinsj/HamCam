@@ -33,14 +33,14 @@ Pixels(1, :) = videoFrame (floor(Point(1)), floor(Point(2)), :);
 videoFrame = insertShape(videoFrame, 'Polygon', bboxPolygon);
 videoFrame = insertShape(videoFrame, 'Polygon', cropagon);
 
-figure; imshow(videoFrame); title('Detected face');
+%figure; imshow(videoFrame); title('Detected face');
 
 % Detect feature points in the face region.
 points = detectMinEigenFeatures(rgb2gray(videoFrame), 'ROI', bbox);
 
 % Display the detected points.
-figure, imshow(videoFrame), hold on, title('Detected features');
-plot(points);
+%figure, imshow(videoFrame), hold on, title('Detected features');
+%plot(points);
 
 % Create a point tracker and enable the bidirectional error constraint to
 % make it more robust in the presence of noise and clutter.
@@ -126,14 +126,14 @@ while ~isDone(videoFileReader)
     writeVideo(myVideo, videoFrame);
 end
 
-fig1 = figure;
-plot(1:frame,Pixels(:,1),'color',[1.0 0.0 0.0]);
-
-fig2 = figure;
-plot(1:frame,Pixels(:,2),'color',[0.0 1.0 0.0]);
-
-fig3 = figure;
-plot(1:frame,Pixels(:,3),'color',[0.0 0.0 1.0]);
+% fig1 = figure;
+% plot(1:frame,Pixels(:,1),'color',[1.0 0.0 0.0]);
+% 
+% fig2 = figure;
+% plot(1:frame,Pixels(:,2),'color',[0.0 1.0 0.0]);
+% 
+% fig3 = figure;
+% plot(1:frame,Pixels(:,3),'color',[0.0 0.0 1.0]);
 
 % Clean up
 release(videoFileReader);
@@ -165,5 +165,5 @@ while ~isDone(videoFileReader)
     G(frame) = M;
 end
 
-fig1 = figure;
+fig1 = figure('name','Processed heartbeat');
 plot(1:frame,G(:),'color',[1.0 0.0 0.0]);

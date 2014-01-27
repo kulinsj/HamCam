@@ -141,7 +141,6 @@ while ~isDone(videoFileReader)
         %Crop the frame around the tracked points
         for j = 1:numSamples
             CropFrame = imcrop(videoFrame, [(MyPoints(j,1)-5) (MyPoints(j,2)-5) 11 11]);
-            Pixels(frame, :) = videoFrame (floor(MyPoints(2)), floor(MyPoints(1)), :);
             writeVideo(Crop(j), CropFrame);
         end
         
@@ -169,38 +168,41 @@ end
 % plot(1:frame,Pixels(:,3),'color',[0.0 0.0 1.0]);
 
 % Clean up
-release(videoFileReader);
 release(videoPlayer);
 release(pointTracker);
 for i = 1:numSamples
-    Crop(i)
     close(Crop(i));
 end
 %close(myVideo);
-% 
-% %% Run MIT code on cropped video
-% inFile = fullfile(dataDir,'JoanneSmallCrop.avi');
-% % inFile = fullfile(resultsDir,'JoanneSmallCrop.avi');
-% fprintf('Processing %s\n\n', inFile);
-% amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,2,72/60,98/60,30, 0);
-% 
-% %% Graph data
-% inFile = fullfile(dataDir,'JoanneSmallCrop-ideal-from-1.2-to-1.6333-alpha-50-level-2-chromAtn-0.avi');
-% 
-% videoFileReader = vision.VideoFileReader(inFile);
-% videoFrame      = step(videoFileReader);
-% frame = 1;
-% M = mean(mean(mean(videoFrame)));
-% 
-% G = [];
-% G(frame) = M;
-% 
-% while ~isDone(videoFileReader)
-%     videoFrame = step(videoFileReader);
-%     frame = frame+1;
-%     M = mean(mean(mean(videoFrame)));
-%     G(frame) = M;
-% end
-% 
-% fig1 = figure('name','Processed heartbeat');
-% plot(1:frame,G(:),'color',[1.0 0.0 0.0]);
+
+for i = 1:numSamples
+    %% Run MIT code on cropped video
+    %inFile = fullfile(dataDir,'JoanneSmallCrop.avi');
+    filename = strcat(strcat(strcat(infileName,'Crop'),num2str(i)),'.avi');
+    inFile = fullfile(resultsDir,filename);
+    amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,2,45/60,100/60,30, 0);
+end
+
+for i = 1:numSamples
+    %% Graph data
+    filename = strcat(strcat(strcat(infileName,'Crop'),num2str(i)),'-ideal-from-0.75-to-1.6667-alpha-50-level-2-chromAtn-0.avi');
+    inFile = fullfile(resultsDir,filename);
+
+    videoFileReader = vision.VideoFileReader(inFile);
+    videoFrame = step(videoFileReader);
+    frame = 1;
+    M = mean(mean(mean(videoFrame)));
+
+    G = [];
+    G(frame) = M;
+
+    while ~isDone(videoFileReader)
+        videoFrame = step(videoFileReader);
+        frame = frame+1;
+        M = mean(mean(mean(videoFrame)));
+        G(frame) = M;
+    end
+
+    fig1 = figure('name',strcat('Processed heartbeat from sample ', num2str(i)));
+    plot(1:frame,G(:),'color',[1.0 0.0 0.0]);
+end

@@ -67,7 +67,7 @@ function amplify_spatial_Gdown_temporal_ideal(vidFile,outDir,alpha,level, ...
     % output video
     k = 0;
     for i=startIndex:endIndex
-        k = k+1
+        k = k+1;
         temp.cdata = read(vid, i);
         [rgbframe,~] = frame2im(temp);
         rgbframe = im2double(rgbframe);

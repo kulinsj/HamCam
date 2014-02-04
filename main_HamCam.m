@@ -6,10 +6,10 @@ dataDir = './data';
 resultsDir = 'Results';
 mkdir(resultsDir);
 
-% infileName = 'more_still_small';
-% inFile = fullfile(dataDir,strcat(infileName,'.mp4'));
-infileName = 'JoanneSmall';
-inFile = fullfile(dataDir,strcat(infileName,'.avi'));
+infileName = 'more_still_small';
+inFile = fullfile(dataDir,strcat(infileName,'.mp4'));
+% infileName = 'JoanneSmall';
+% inFile = fullfile(dataDir,strcat(infileName,'.avi'));
 outfile2 = fullfile(resultsDir,strcat(infileName,'Crop'));
 
 % Create a cascade detector object.
@@ -136,140 +136,124 @@ numSamples = size(points,1);
 
 % interval = round(numPoints/numSamples);
 
-for i = 1:numSamples
+for i = 1:numSamples+1
 %    TrackedIndecies(i) = round(interval*(i-0.5)+1);
    Crop(i) = VideoWriter(strcat(outfile2,num2str(i)));
    open(Crop(i));
 end
 
-% while ~isDone(videoFileReader)
-%     % get the next frame
-%     videoFrame = step(videoFileReader);
-%     frame = frame+1;
-%     
-%     % Track the points. Note that some points may be lost.
-%     [points, isFound] = step(pointTracker, videoFrame);
-%     
-%     %sub-array of isFound to figure out point losses for each tracked
-%     %point's index.
-%     currentNumTrackedPoints = size(TrackedIndecies);
-%     lossSoFar = 0;
-%     updatedTrackedIndicies = zeros(numSamples,1);
-%     
-%     for i = 1:currentNumTrackedPoints(1)
-%         %create sub-array of "isFound" between each tracked point index
-%         %pair
-%         if i == 1
-%             iFT = isFound(1:TrackedIndecies(1),1);
-%         else
-%             iFT = isFound((TrackedIndecies(i-1)+1):TrackedIndecies(i),1);
-%         end
-%         %calc number of lost points up to the current index
-%         thisIFTloss = sum(iFT(:)==0);
-%         lossSoFar = lossSoFar + thisIFTloss;
-%         if isFound(TrackedIndecies(i),1) == 0
-%             fprintf('point lost: %i \n', TrackedIndecies(i));
-%             updatedTrackedIndicies(i) = - 1;
-%         else
-%             %save updated index to new array
-%             updatedTrackedIndicies(i) = TrackedIndecies(i) - lossSoFar;
-%         end
-%     end
-%     
-%     TrackedIndecies = updatedTrackedIndicies;
-%     
-% %     iFT = isFound(1:TrackedIndecies, 1);
-% %     if isFound(TrackedIndecies,1) == 0
-% %        fprintf('point lost\n'); 
-% %     end
-% %     loss = sum(iFT(:)==0);
-% %     TrackedIndecies = TrackedIndecies - loss;
-%     
-%     visiblePoints = points(isFound, :);
-%     oldInliers = oldPoints(isFound, :);
-%     MyPoints = visiblePoints(TrackedIndecies(:), :);
-%     %MyPoints = [275 902];
-%     
-%     if size(visiblePoints, 1) >= 2 % need at least 2 points
-% 
-%         % Estimate the geometric transformation between the old points
-%         % and the new points and eliminate outliers
+while ~isDone(videoFileReader)
+    % get the next frame
+    videoFrame = step(videoFileReader);
+    frame = frame+1;
+    
+    % Track the points. Note that some points may be lost.
+    [points, isFound] = step(pointTracker, videoFrame);
+    
+    %sub-array of isFound to figure out point losses for each tracked
+    %point's index.
+    currentNumTrackedPoints = size(points,1);
+    lossSoFar = 0;
+    updatedTrackedIndicies = zeros(numSamples,1);
+    
+    for i = 1:size(isFound,1)
+        if isFound(i) == 0
+            fprintf('point lost: %i \n',i);
+        end
+    end
+    
+    visiblePoints = points(isFound, :);
+    oldInliers = oldPoints(isFound, :);
+    MyPoints = visiblePoints;
+
+    if size(visiblePoints, 1) >= 2 % need at least 2 points
+
+        % Estimate the geometric transformation between the old points
+        % and the new points and eliminate outliers
 %         [xform, oldInliers, NvisiblePoints, newTrackedIndecies] = estimateGeometricTransform_MOD(...
 %             oldInliers, visiblePoints, TrackedIndecies, 'similarity', 'MaxDistance', 4);
-%         
+        [xform, oldInliers, NvisiblePoints, newTrackedIndecies] = estimateGeometricTransform_MOD(...
+            oldInliers, visiblePoints, 1:size(points,1), 'similarity', 'MaxDistance', 4);
+        
 %         visiblePoints = NvisiblePoints;
 %         TrackedIndecies = newTrackedIndecies;
 %         MyPoints = visiblePoints(TrackedIndecies, :);
-%         %MyPoints
-%         % Apply the transformation to the bounding box
+        % Apply the transformation to the bounding box
 %         [faceBoxPolygon(1:2:end), faceBoxPolygon(2:2:end)] ...
 %             = transformPointsForward(xform, faceBoxPolygon(1:2:end), faceBoxPolygon(2:2:end));
-%         
-%         %Crop the frame around the tracked points
-%         for j = 1:numSamples
-%             CropFrame = imcrop(videoFrame, [(MyPoints(j,1)-5) (MyPoints(j,2)-5) 11 11]);
-%             writeVideo(Crop(j), CropFrame);
-%         end
-%         
-%         videoFrame = insertMarker(videoFrame, visiblePoints, '+', ...
-%             'Color', 'white');
-%         videoFrame = insertMarker(videoFrame, MyPoints, '+', ...
-%             'Color', 'green');
-%         % Reset the points
-%         oldPoints = visiblePoints;
-%         setPoints(pointTracker, oldPoints);
-%     end
+        
+        %Crop the frame around the tracked points
+        for j = 1:numSamples
+            CropFrame = imcrop(videoFrame, [(MyPoints(j,1)-5) (MyPoints(j,2)-5) 11 11]);
+            writeVideo(Crop(j), CropFrame);
+        end
+        CropFrame = imcrop(videoFrame, [10 10 11 11]);
+        writeVideo(Crop(4), CropFrame);
+            
+        videoFrame = insertMarker(videoFrame, visiblePoints, '+', ...
+            'Color', 'white');
+        videoFrame = insertMarker(videoFrame, MyPoints, '+', ...
+            'Color', 'green');
+        % Reset the points
+        oldPoints = visiblePoints;
+        setPoints(pointTracker, oldPoints);
+    end
+
+    % Display the annotated video frame using the video player object
+    step(videoPlayer, videoFrame);
+    %writeVideo(myVideo, videoFrame);
+end
+
+% fig1 = figure;
+% plot(1:frame,Pixels(:,1),'color',[1.0 0.0 0.0]);
 % 
-%     % Display the annotated video frame using the video player object
-%     step(videoPlayer, videoFrame);
-%     %writeVideo(myVideo, videoFrame);
-% end
+% fig2 = figure;
+% plot(1:frame,Pixels(:,2),'color',[0.0 1.0 0.0]);
 % 
-% % fig1 = figure;
-% % plot(1:frame,Pixels(:,1),'color',[1.0 0.0 0.0]);
-% % 
-% % fig2 = figure;
-% % plot(1:frame,Pixels(:,2),'color',[0.0 1.0 0.0]);
-% % 
-% % fig3 = figure;
-% % plot(1:frame,Pixels(:,3),'color',[0.0 0.0 1.0]);
-% 
-% % Clean up
-% release(videoPlayer);
-% release(pointTracker);
-% for i = 1:numSamples
-%     close(Crop(i));
-% end
-% %close(myVideo);
-% 
-% for i = 1:numSamples
-%     %% Run MIT code on cropped video
-%     %inFile = fullfile(dataDir,'JoanneSmallCrop.avi');
-%     filename = strcat(strcat(strcat(infileName,'Crop'),num2str(i)),'.avi');
-%     inFile = fullfile(resultsDir,filename);
-%     amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,2,45/60,100/60,30, 0);
-% end
-% 
-% for i = 1:numSamples
-%     %% Graph data
-%     filename = strcat(strcat(strcat(infileName,'Crop'),num2str(i)),'-ideal-from-0.75-to-1.6667-alpha-50-level-2-chromAtn-0.avi');
-%     inFile = fullfile(resultsDir,filename);
-% 
-%     videoFileReader = vision.VideoFileReader(inFile);
-%     videoFrame = step(videoFileReader);
-%     frame = 1;
+% fig3 = figure;
+% plot(1:frame,Pixels(:,3),'color',[0.0 0.0 1.0]);
+
+% Clean up
+release(videoPlayer);
+release(pointTracker);
+for i = 1:numSamples+1
+    close(Crop(i));
+end
+%close(myVideo);
+
+for i = 1:numSamples+1
+    %% Run MIT code on cropped video
+    %inFile = fullfile(dataDir,'JoanneSmallCrop.avi');
+    filename = strcat(strcat(strcat(infileName,'Crop'),num2str(i)),'.avi');
+    inFile = fullfile(resultsDir,filename);
+    amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,2,45/60,100/60,30, 0);
+%     amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,2,120/60,240/60,30, 0);
+end
+
+for i = 1:numSamples+1
+    %% Graph data
+    filename = strcat(strcat(strcat(infileName,'Crop'),num2str(i)),'-ideal-from-0.75-to-1.6667-alpha-50-level-2-chromAtn-0.avi');
+%     filename = strcat(strcat(strcat(infileName,'Crop'),num2str(i)),'-ideal-from-2-to-4-alpha-50-level-2-chromAtn-0.avi');
+    inFile = fullfile(resultsDir,filename);
+
+    videoFileReader = vision.VideoFileReader(inFile);
+    videoFrame = step(videoFileReader);
+    frame = 1;
 %     M = mean(mean(mean(videoFrame)));
-% 
-%     G = [];
-%     G(frame) = M;
-% 
-%     while ~isDone(videoFileReader)
-%         videoFrame = step(videoFileReader);
-%         frame = frame+1;
+    M = mean(mean(videoFrame(:,:,1)));
+
+    G = [];
+    G(frame) = M;
+
+    while ~isDone(videoFileReader)
+        videoFrame = step(videoFileReader);
+        frame = frame+1;
 %         M = mean(mean(mean(videoFrame)));
-%         G(frame) = M;
-%     end
-% 
-%     fig1 = figure('name',strcat('Processed heartbeat from sample ', num2str(i)));
-%     plot(1:frame,G(:),'color',[1.0 0.0 0.0]);
-% end
+        M = mean(mean(videoFrame(:,:,1)));
+        G(frame) = M;
+    end
+
+    fig1 = figure('name',strcat('Processed heartbeat from sample ', num2str(i)));
+    plot(1:frame,G(:),'color',[1.0 0.0 0.0]);
+
+end

@@ -229,6 +229,8 @@ for k = 1:numFaces
         step(videoPlayer, videoFrame);
         %writeVideo(myVideo, videoFrame);
     end
+    
+    numFrames = frame;
 
     % fig1 = figure;
     % plot(1:frame,Pixels(:,1),'color',[1.0 0.0 0.0]);
@@ -275,6 +277,9 @@ for k = 1:numFaces
     
     for i = 1:numSamples+1
         fig1 = figure('name',strcat('Processed heartbeat from sample ', num2str(i), ' for face', num2str(k)));
+        G = zeros(8,numFrames);
+        modResponse = zeros(8,numFrames);
+        responseMean = zeros(8, numFrames);
         for j = 1:8 % 7 = number of bands
             %% Graph data
             switch j
@@ -320,30 +325,31 @@ for k = 1:numFaces
             frame = 1;
         %     M = mean(mean(mean(videoFrame)));
             M = mean(videoFrame(5,:,1));
-
-            G = [];
-            G(frame) = M;
+            G(j, frame) = M;
 
             while ~isDone(videoFileReader)
                 videoFrame = step(videoFileReader);
                 frame = frame+1;
         %         M = mean(mean(mean(videoFrame)));
                 M = mean(videoFrame(5,:,1));
-                G(frame) = M;
+                G(j,frame) = M;
             end
 %             plot(1:frame,G(:),'color',colArray);
             responseMean = zeros(1, size(G,2));
-            modResponse = zeros(1, size(G,2));
             for x = 25:(size(G,2)-25)
-                responseMean(x) = mean(G(x-24:x+24));
-                diff = G(x) - responseMean(x);
-                modResponse(x) = responseMean(x) + alpha*diff;
+                responseMean(x) = mean(G(j,x-24:x+24));
+                diff = G(j,x) - responseMean(x);
+                modResponse(j, x) = responseMean(x) + alpha*diff;
             end
             plot(1:frame,modResponse(:),'color',colArray);
             hold on;
             ylim([0, 1]);
         end
         legend('40 to 50','50 to 60', '60 to 70', '70 to 80', '80 to 90', '90 to 100', '100 to 110', '110 to 120');
+        figure('name', 'Hearbeat');
+        for y = 50:numFrames-50
+%             response55 = 
+        end
     end
     figure;
     plot(redLED);

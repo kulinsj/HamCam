@@ -18,7 +18,7 @@ outfile3 = fullfile(resultsDir,strcat(infileName,'Demo'));
 % Create a cascade detector object.
 faceDetector = vision.CascadeObjectDetector();
 bigEyePairDetector = vision.CascadeObjectDetector('EyePairBig');
-% smallEyePairDetector = vision.CascadeObjectDetector('EyePairSmall');
+% bigEyePairDetector = vision.CascadeObjectDetector('EyePairSmall');
 bigEyePairDetector.MergeThreshold = 1;
 % smallEyePairDetector.MergeThreshold = 1;
 % mouthDetector = vision.CascadeObjectDetector('Mouth'); 
@@ -46,7 +46,7 @@ for i = 1:numFaces
     faceCrops = imcrop(videoFrame, [faceX faceY faceW faceH]);
     % Draw the returned bounding box around the detected face.
     videoFrame = insertShape(videoFrame, 'Polygon', faceBoxPolygon);
-    
+    imshow(videoFrame);
     %only look for eye pair within detected face region
     pairEyeBoxBig = step(bigEyePairDetector, faceCrops);
     
@@ -94,8 +94,7 @@ figure; imshow(videoFrame); title('Detected Stuff');
 
 for k = 1:numFaces
     if k > 1
-        infileName = 'JoanneAudreyMultiFace4';
-        inFile = fullfile(dataDir,strcat(infileName,'.mp4'));
+        inFile = fullfile(dataDir,strcat(infileName,'.avi'));
         videoFileReader = vision.VideoFileReader(inFile);
         videoFrame = step(videoFileReader);
         imshow(videoFrame);
@@ -203,11 +202,14 @@ for k = 1:numFaces
 
             %Crop the frame around the tracked points
             for j = 1:numSamples
+                original(j,frame-1) = mean(videoFrame(round(MyPoints(j,1)), round(MyPoints(j,2)), :));
                 CropFrame = imcrop(videoFrame, [(MyPoints(j,1)-5) (MyPoints(j,2)-5) 11 11]);
                 writeVideo(Crop(j), CropFrame);
             end
             CropFrame = imcrop(videoFrame, [5 5 11 11]);
             writeVideo(Crop(4), CropFrame);
+            %[274 899] RED LED in JoanneSmall.avi
+            redLED(frame-1) = mean(videoFrame(899, 274, :));
 
             videoFrame = insertMarker(videoFrame, visiblePoints, '+', ...
                 'Color', 'white');
@@ -249,46 +251,67 @@ for k = 1:numFaces
     for i = 1:numSamples+1
         %% Run MIT code on cropped video
         %inFile = fullfile(dataDir,'JoanneSmallCrop.avi');
+        
         filename = strcat(strcat(strcat(infileName,'Crop'),num2str(i)),'.avi');
         inFile = fullfile(resultsDir,filename);
-        amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,2,40/60,50/60,30, 0);
-        amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,2,50/60,60/60,30, 0);
-        amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,2,60/60,70/60,30, 0);
-        amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,2,70/60,80/60,30, 0);
-        amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,2,80/60,90/60,30, 0);
-        amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,2,90/60,100/60,30, 0);
-        amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,2,100/60,110/60,30, 0);
-    %     amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,2,120/60,240/60,30, 0);
+        fprintf('face %i, sample %i, filter %i of %i/n', k, i, 1, 8);
+        amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,40/60,50/60,30, 0);
+        fprintf('face %i, sample %i, filter %i of %i/n', k, i, 2, 8);
+        amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,50/60,60/60,30, 0);
+        fprintf('face %i, sample %i, filter %i of %i/n', k, i, 3, 8);
+        amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,60/60,70/60,30, 0);
+        fprintf('face %i, sample %i, filter %i of %i/n', k, i, 4, 8);
+        amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,70/60,80/60,30, 0);
+        fprintf('face %i, sample %i, filter %i of %i/n', k, i, 5, 8);
+        amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,80/60,90/60,30, 0);
+        fprintf('face %i, sample %i, filter %i of %i/n', k, i, 6, 8);
+        amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,90/60,100/60,30, 0);
+        fprintf('face %i, sample %i, filter %i of %i/n', k, i, 7, 8);
+        amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,100/60,110/60,30, 0);
+        fprintf('face %i, sample %i, filter %i of %i/n', k, i, 8, 8);
+        amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,110/60,120/60,30, 0);
+    %     amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,3,120/60,240/60,30, 0);
     end
     
     for i = 1:numSamples+1
         fig1 = figure('name',strcat('Processed heartbeat from sample ', num2str(i), ' for face', num2str(k)));
-        for j = 1:7 % 7 = number of bands
+        for j = 1:8 % 7 = number of bands
             %% Graph data
             switch j
                 case 1
                     rangeString = '0.66667-to-0.83333';
+                    alpha = 1;
                     colArray = [1 0 0];
                 case 2
                     rangeString = '0.83333-to-1';
+                    alpha = 1.18;
                     colArray = [1 0.5 0];
                 case 3
                     rangeString = '1-to-1.1667';
+                    alpha = 1.35;
                     colArray = [1 1 0];
                 case 4
                     rangeString = '1.1667-to-1.3333';
+                    alpha = 1.49;
                     colArray = [0 1 0];
                 case 5
                     rangeString = '1.3333-to-1.5';
+                    alpha = 1.60;
                     colArray = [0 1 1];
                 case 6
                     rangeString = '1.5-to-1.6667';
+                    alpha = 1.7;
                     colArray = [0 0 1];
                 case 7
                     rangeString = '1.6667-to-1.8333';
+                    alpha = 1.77;
                     colArray = [1 0 1];
+                case 8
+                    rangeString = '1.8333-to-2';
+                    alpha = 1.87;
+                    colArray = [0.1 0.1 0.1];
             end
-            filename = strcat(strcat(strcat(infileName,'Crop'),num2str(i)),'-ideal-from-',rangeString,'-alpha-50-level-2-chromAtn-0.avi');
+            filename = strcat(strcat(strcat(infileName,'Crop'),num2str(i)),'-ideal-from-',rangeString,'-alpha-50-level-1-chromAtn-0.avi');
         %     filename = strcat(strcat(strcat(infileName,'Crop'),num2str(i)),'-ideal-from-2-to-4-alpha-50-level-2-chromAtn-0.avi');
             inFile = fullfile(resultsDir,filename);
 
@@ -308,10 +331,28 @@ for k = 1:numFaces
                 M = mean(videoFrame(5,:,1));
                 G(frame) = M;
             end
-            plot(1:frame,G(:),'color',colArray);
+%             plot(1:frame,G(:),'color',colArray);
+            responseMean = zeros(1, size(G,2));
+            modResponse = zeros(1, size(G,2));
+            for x = 25:(size(G,2)-25)
+                responseMean(x) = mean(G(x-24:x+24));
+                diff = G(x) - responseMean(x);
+                modResponse(x) = responseMean(x) + alpha*diff;
+            end
+            plot(1:frame,modResponse(:),'color',colArray);
             hold on;
             ylim([0, 1]);
         end
-        legend('40 to 50','50 to 60', '60 to 70', '70 to 80', '80 to 90', '90 to 100', '100 to 110');
+        legend('40 to 50','50 to 60', '60 to 70', '70 to 80', '80 to 90', '90 to 100', '100 to 110', '110 to 120');
+    end
+    figure;
+    plot(redLED);
+    ylim([0, 1]);
+    xlim([0 500]);
+    for j = 1:numSamples
+       figure('name',strcat('Unaltered intensity for point ', num2str(j)));
+       plot(original(j,:));
+       ylim([0, 1]);
+       xlim([0 500]);
     end
 end

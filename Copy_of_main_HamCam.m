@@ -8,10 +8,10 @@ mkdir(resultsDir);
 
 % infileName = 'more_still_small';
 % infileName = 'JoanneAudreyMultiFace4';
-infileName = 'JoanneSmall';
-% infileName = 'eyebook';
-inFile = fullfile(dataDir,strcat(infileName,'.avi'));
-% inFile = fullfile(dataDir,strcat(infileName,'.mp4'));
+% infileName = 'JoanneSmall';
+infileName = 'eyebook';
+% inFile = fullfile(dataDir,strcat(infileName,'.avi'));
+inFile = fullfile(dataDir,strcat(infileName,'.mp4'));
 outfile2 = fullfile(resultsDir,strcat(infileName,'Crop'));
 outfile3 = fullfile(resultsDir,strcat(infileName,'Demo'));
 
@@ -29,47 +29,20 @@ videoFileReader = vision.VideoFileReader(inFile);
 videoFrame      = step(videoFileReader);
 faceBox         = step(faceDetector, videoFrame);
 
-numFaces = size(faceBox,1);
-
-ExtrapolatedPoint = zeros(numFaces,3,2);
-
 % Convert the first box to a polygon.
 % This is needed to be able to visualize the rotation of the object.
 
+pairEyeBoxBig = step(bigEyePairDetector, videoFrame);
+eyePairBigX = round(pairEyeBoxBig(1, 1)); 
+eyePairBigY = round(pairEyeBoxBig(1, 2)); 
+eyePairBigW = round(pairEyeBoxBig(1, 3)); 
+eyePairBigH = round(pairEyeBoxBig(1, 4));
+pairEyeBoxBigPoly = [eyePairBigX, eyePairBigY, eyePairBigX+eyePairBigW, eyePairBigY, eyePairBigX+eyePairBigW, eyePairBigY+eyePairBigH, eyePairBigX, eyePairBigY+eyePairBigH];
+videoFrame = insertShape(videoFrame, 'Polygon', pairEyeBoxBigPoly, 'Color', [1,0,1]);
+
+numFaces = size(pairEyeBoxBig,1);
+ExtrapolatedPoint = zeros(numFaces,3,2);
 for i = 1:numFaces
-    faceX = faceBox(i, 1); 
-    faceY = faceBox(i, 2); 
-    faceW = faceBox(i, 3); 
-    faceH = faceBox(i, 4);
-    faceBoxPolygon = [faceX, faceY, faceX+faceW, faceY, faceX+faceW, faceY+faceH, faceX, faceY+faceH];
-    
-    faceCrops = imcrop(videoFrame, [faceX faceY faceW faceH]);
-    % Draw the returned bounding box around the detected face.
-    videoFrame = insertShape(videoFrame, 'Polygon', faceBoxPolygon);
-    imshow(videoFrame);
-    %only look for eye pair within detected face region
-    pairEyeBoxBig = step(bigEyePairDetector, faceCrops);
-    
-    thresh = 1;
-    while size(pairEyeBoxBig,1) > 1
-        %if more than one pair of eyes is detected on the face, increase
-        %the threshold until only one set of eyes is identified
-        thresh = thresh+1;
-        bigEyePairDetector.MergeThreshold = thresh;
-        pairEyeBoxBig = step(bigEyePairDetector, faceCrops);
-    end
-    %translate coords in facecrop to coords in whole image
-    pairEyeBoxBig(1,1) = pairEyeBoxBig(1,1)+faceX;
-    pairEyeBoxBig(1,2) = pairEyeBoxBig(1,2)+faceY;
-    
-    
-    eyePairBigX = pairEyeBoxBig(1, 1); 
-    eyePairBigY = pairEyeBoxBig(1, 2); 
-    eyePairBigW = pairEyeBoxBig(1, 3); 
-    eyePairBigH = pairEyeBoxBig(1, 4);
-    pairEyeBoxBigPoly = [eyePairBigX, eyePairBigY, eyePairBigX+eyePairBigW, eyePairBigY, eyePairBigX+eyePairBigW, eyePairBigY+eyePairBigH, eyePairBigX, eyePairBigY+eyePairBigH];
-    videoFrame = insertShape(videoFrame, 'Polygon', pairEyeBoxBigPoly, 'Color', [1,0,1]);
-    
     ExtrapolatedPoint(i,1:3,1:2) = [eyePairBigX + eyePairBigW/4, eyePairBigY + eyePairBigH*2; ...
         eyePairBigX + 3*eyePairBigW/4, eyePairBigY + eyePairBigH*2; ...
         eyePairBigX + eyePairBigW/2, eyePairBigY - eyePairBigH/2];
@@ -77,7 +50,6 @@ for i = 1:numFaces
     videoFrame = insertMarker(videoFrame, [ExtrapolatedPoint(i,2,1) ExtrapolatedPoint(i,2,2)], '+', 'Color', 'red');
     videoFrame = insertMarker(videoFrame, [ExtrapolatedPoint(i,3,1) ExtrapolatedPoint(i,3,2)], '+', 'Color', 'red');
 end
-
 numPoints = size(ExtrapolatedPoint,2);
 %ExtrapolatedPoint now contains 3 points for each face
 
@@ -94,14 +66,13 @@ figure; imshow(videoFrame); title('Detected Stuff');
 
 for k = 1:numFaces
     if k > 1
-        inFile = fullfile(dataDir,strcat(infileName,'.avi'));
         videoFileReader = vision.VideoFileReader(inFile);
         videoFrame = step(videoFileReader);
         imshow(videoFrame);
     end
     
     % Detect feature points in the face region.
-    points = detectMinEigenFeatures(rgb2gray(videoFrame), 'ROI', faceBox(k,:));
+    points = detectMinEigenFeatures(rgb2gray(videoFrame));
     
     minDist = zeros(size(points,1),size(ExtrapolatedPoint,2));
     
@@ -209,7 +180,7 @@ for k = 1:numFaces
             CropFrame = imcrop(videoFrame, [5 5 11 11]);
             writeVideo(Crop(4), CropFrame);
             %[274 899] RED LED in JoanneSmall.avi
-            redLED(frame-1) = mean(videoFrame(899, 274, :));
+%             redLED(frame-1) = mean(videoFrame(899, 274, :));
 
             videoFrame = insertMarker(videoFrame, visiblePoints, '+', ...
                 'Color', 'white');
@@ -256,31 +227,33 @@ for k = 1:numFaces
         
         filename = strcat(strcat(strcat(infileName,'Crop'),num2str(i)),'.avi');
         inFile = fullfile(resultsDir,filename);
-        fprintf('face %i, sample %i, filter %i of %i/n', k, i, 1, 8);
+        fprintf('face %i, sample %i, filter %i of %i\n', k, i, 1, 9);
         amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,40/60,50/60,30, 0);
-        fprintf('face %i, sample %i, filter %i of %i/n', k, i, 2, 8);
+        fprintf('face %i, sample %i, filter %i of %i\n', k, i, 2, 9);
         amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,50/60,60/60,30, 0);
-        fprintf('face %i, sample %i, filter %i of %i/n', k, i, 3, 8);
+        fprintf('face %i, sample %i, filter %i of %i\n', k, i, 3, 9);
         amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,60/60,70/60,30, 0);
-        fprintf('face %i, sample %i, filter %i of %i/n', k, i, 4, 8);
+        fprintf('face %i, sample %i, filter %i of %i\n', k, i, 4, 9);
         amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,70/60,80/60,30, 0);
-        fprintf('face %i, sample %i, filter %i of %i/n', k, i, 5, 8);
+        fprintf('face %i, sample %i, filter %i of %i\n', k, i, 5, 9);
         amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,80/60,90/60,30, 0);
-        fprintf('face %i, sample %i, filter %i of %i/n', k, i, 6, 8);
+        fprintf('face %i, sample %i, filter %i of %i\n', k, i, 6, 9);
         amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,90/60,100/60,30, 0);
-        fprintf('face %i, sample %i, filter %i of %i/n', k, i, 7, 8);
+        fprintf('face %i, sample %i, filter %i of %i\n', k, i, 7, 9);
         amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,100/60,110/60,30, 0);
-        fprintf('face %i, sample %i, filter %i of %i/n', k, i, 8, 8);
+        fprintf('face %i, sample %i, filter %i of %i\n', k, i, 8, 9);
         amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,110/60,120/60,30, 0);
+        fprintf('face %i, sample %i, filter %i of %i\n', k, i, 9, 9);
+        amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,0.05,0.1,30, 0);
     %     amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,3,120/60,240/60,30, 0);
     end
     
     for i = 1:numSamples+1
         fig1 = figure('name',strcat('Processed heartbeat from sample ', num2str(i), ' for face', num2str(k)));
-        G = zeros(8,numFrames);
-        modResponse = zeros(8,numFrames);
-        responseMean = zeros(8, numFrames);
-        for j = 1:8 % 7 = number of bands
+        G = zeros(9,numFrames);
+        modResponse = zeros(9,numFrames);
+        responseMean = zeros(9, numFrames);
+        for j = 1:9 % 9 = number of bands
             %% Graph data
             switch j
                 case 1
@@ -314,6 +287,10 @@ for k = 1:numFaces
                 case 8
                     rangeString = '1.8333-to-2';
                     alpha = 1.87;
+                    colArray = [1 0.5 1];
+                case 9
+                    rangeString = '0.05-to-0.1';
+                    alpha = 1;
                     colArray = [0.1 0.1 0.1];
             end
             filename = strcat(strcat(strcat(infileName,'Crop'),num2str(i)),'-ideal-from-',rangeString,'-alpha-50-level-1-chromAtn-0.avi');
@@ -334,27 +311,27 @@ for k = 1:numFaces
                 M = mean(videoFrame(5,:,1));
                 G(j,frame) = M;
             end
-%             plot(1:frame,G(:),'color',colArray);
+            plot(1:numFrames,G(j,:),'color',colArray);
             responseMean = zeros(1, size(G,2));
             for x = 25:(size(G,2)-25)
                 responseMean(x) = mean(G(j,x-24:x+24));
                 diff = G(j,x) - responseMean(x);
                 modResponse(j, x) = responseMean(x) + alpha*diff;
             end
-            plot(1:numFrames,modResponse(j,:),'color',colArray);
+%             plot(1:numFrames,modResponse(j,:),'color',colArray);
             hold on;
             ylim([0, 1]);
         end
-        legend('40 to 50','50 to 60', '60 to 70', '70 to 80', '80 to 90', '90 to 100', '100 to 110', '110 to 120');
+        legend('40 to 50','50 to 60', '60 to 70', '70 to 80', '80 to 90', '90 to 100', '100 to 110', '110 to 120', '0.05 to 0.1Hz');
 %         figure('name', 'Hearbeat');
-%         for y = 50:numFrames-50
+        for y = 50:numFrames-50
 %              response55 = 
-%         end
+        end
     end
-    figure;
-    plot(redLED);
-    ylim([0, 1]);
-    xlim([0 500]);
+%     figure;
+%     plot(redLED);
+%     ylim([0, 1]);
+%     xlim([0 500]);
     for j = 1:numSamples
        figure('name',strcat('Unaltered intensity for point ', num2str(j)));
        plot(original(j,:));

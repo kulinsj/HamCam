@@ -1,7 +1,7 @@
 close all;
 clear;
 clc;
-
+figure;
 dataDir = './data';
 resultsDir = 'Results';
 mkdir(resultsDir);
@@ -145,11 +145,11 @@ for k = 1:numFaces
         lossSoFar = 0;
         updatedTrackedIndicies = zeros(numSamples,1);
 
-        for i = 1:size(isFound,1)
-            if isFound(i) == 0
-                fprintf('point lost: %i \n',i);
-            end
-        end
+%         for i = 1:size(isFound,1)
+%             if isFound(i) == 0
+%                 fprintf('point lost: %i \n',i);
+%             end
+%         end
 
         visiblePoints = points(isFound, :);
         oldInliers = oldPoints(isFound, :);
@@ -226,25 +226,25 @@ for k = 1:numFaces
         %inFile = fullfile(dataDir,'JoanneSmallCrop.avi');
         
         filename = strcat(strcat(strcat(infileName,'Crop'),num2str(i)),'.avi');
-        inFile = fullfile(resultsDir,filename);
+        inFileM = fullfile(resultsDir,filename);
         fprintf('face %i, sample %i, filter %i of %i\n', k, i, 1, 9);
-        amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,40/60,50/60,30, 0);
+        amplify_spatial_Gdown_temporal_ideal(inFileM,resultsDir,50,1,40/60,50/60,30, 0);
         fprintf('face %i, sample %i, filter %i of %i\n', k, i, 2, 9);
-        amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,50/60,60/60,30, 0);
+        amplify_spatial_Gdown_temporal_ideal(inFileM,resultsDir,50,1,50/60,60/60,30, 0);
         fprintf('face %i, sample %i, filter %i of %i\n', k, i, 3, 9);
-        amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,60/60,70/60,30, 0);
+        amplify_spatial_Gdown_temporal_ideal(inFileM,resultsDir,50,1,60/60,70/60,30, 0);
         fprintf('face %i, sample %i, filter %i of %i\n', k, i, 4, 9);
-        amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,70/60,80/60,30, 0);
+        amplify_spatial_Gdown_temporal_ideal(inFileM,resultsDir,50,1,70/60,80/60,30, 0);
         fprintf('face %i, sample %i, filter %i of %i\n', k, i, 5, 9);
-        amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,80/60,90/60,30, 0);
+        amplify_spatial_Gdown_temporal_ideal(inFileM,resultsDir,50,1,80/60,90/60,30, 0);
         fprintf('face %i, sample %i, filter %i of %i\n', k, i, 6, 9);
-        amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,90/60,100/60,30, 0);
+        amplify_spatial_Gdown_temporal_ideal(inFileM,resultsDir,50,1,90/60,100/60,30, 0);
         fprintf('face %i, sample %i, filter %i of %i\n', k, i, 7, 9);
-        amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,100/60,110/60,30, 0);
+        amplify_spatial_Gdown_temporal_ideal(inFileM,resultsDir,50,1,100/60,110/60,30, 0);
         fprintf('face %i, sample %i, filter %i of %i\n', k, i, 8, 9);
-        amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,110/60,120/60,30, 0);
+        amplify_spatial_Gdown_temporal_ideal(inFileM,resultsDir,50,1,110/60,120/60,30, 0);
         fprintf('face %i, sample %i, filter %i of %i\n', k, i, 9, 9);
-        amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,0.05,0.1,30, 0);
+        amplify_spatial_Gdown_temporal_ideal(inFileM,resultsDir,50,1,0.05,0.1,30, 0);
     %     amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,3,120/60,240/60,30, 0);
     end
     
@@ -295,9 +295,9 @@ for k = 1:numFaces
             end
             filename = strcat(strcat(strcat(infileName,'Crop'),num2str(i)),'-ideal-from-',rangeString,'-alpha-50-level-1-chromAtn-0.avi');
         %     filename = strcat(strcat(strcat(infileName,'Crop'),num2str(i)),'-ideal-from-2-to-4-alpha-50-level-2-chromAtn-0.avi');
-            inFile = fullfile(resultsDir,filename);
+            inFileG = fullfile(resultsDir,filename);
 
-            videoFileReader = vision.VideoFileReader(inFile);
+            videoFileReader = vision.VideoFileReader(inFileG);
             videoFrame = step(videoFileReader);
             frame = 1;
         %     M = mean(mean(mean(videoFrame)));
@@ -324,9 +324,9 @@ for k = 1:numFaces
         end
         legend('40 to 50','50 to 60', '60 to 70', '70 to 80', '80 to 90', '90 to 100', '100 to 110', '110 to 120', '0.05 to 0.1Hz');
 %         figure('name', 'Hearbeat');
-        for y = 50:numFrames-50
+%         for y = 50:numFrames-50
 %              response55 = 
-        end
+%         end
     end
 %     figure;
 %     plot(redLED);

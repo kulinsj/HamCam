@@ -9,7 +9,7 @@ mkdir(resultsDir);
 % infileName = 'more_still_small';
 % infileName = 'JoanneAudreyMultiFace4';
 % infileName = 'JoanneSmall';
-infileName = 'eyebook';
+infileName = 'face';
 % inFile = fullfile(dataDir,strcat(infileName,'.avi'));
 inFile = fullfile(dataDir,strcat(infileName,'.mp4'));
 outfile2 = fullfile(resultsDir,strcat(infileName,'Crop'));
@@ -238,7 +238,7 @@ for k = 1:1
         fprintf('face %i, sample %i, filter %i of %i\n', k, i, 5, 9);
         amplify_spatial_Gdown_temporal_ideal(inFileM,resultsDir,50,1,0.3,0.35,30, 0);
         fprintf('face %i, sample %i, filter %i of %i\n', k, i, 6, 9);
-        amplify_spatial_Gdown_temporal_ideal(inFileM,resultsDir,50,1,0.7,0.75,30, 0);
+        amplify_spatial_Gdown_temporal_ideal(inFileM,resultsDir,50,1,0.833,1,30, 0);
         fprintf('face %i, sample %i, filter %i of %i\n', k, i, 7, 9);
         amplify_spatial_Gdown_temporal_ideal(inFileM,resultsDir,50,1,1,1.05,30, 0);
         fprintf('face %i, sample %i, filter %i of %i\n', k, i, 8, 9);
@@ -263,7 +263,7 @@ for k = 1:1
                 case 5
                     rangeString = '0.3-to-0.35';
                 case 6
-                    rangeString = '0.7-to-0.75';
+                    rangeString = '0.833-to-1';
                 case 7
                     rangeString = '1-to-1.05';
                 case 8
@@ -312,13 +312,14 @@ for k = 1:1
             hold on;
         end
         ylim([0, 1]);
-        legend('0.01-to-0.05','0.05-to-0.1', '0.1-to-0.15', '0.2-to-0.25', '0.3-to-0.35', '0.7-to-0.75', '1-to-1.05', '1.2-to-1.25', '2-to-2.5');
+        legend('0.01-to-0.05','0.05-to-0.1', '0.1-to-0.15', '0.2-to-0.25', '0.3-to-0.35', '0.833-to-1', '1-to-1.05', '1.2-to-1.25', '2-to-2.5');
         
         
         modelfun = @(b,x)(b(1)+b(2)*sin(b(3)+b(4)*x));
         beta0 = [0.5;0.15;0.2;0.01]; %Guess at initial params of sine functions
         B = zeros(9,4);
-        div = 77;
+        
+        div = 50;
         figure('name',strcat('Fit curves for sample ', num2str(i), ' for face', num2str(k)));
         for j = 1:9  %plot the fit curves
             b1 = mean(G(j,:));
@@ -355,7 +356,8 @@ for k = 1:1
             Y = G(j,find(G(j,:),1,'first'):find(G(j,:),1,'last'));
             numPoints = size(Y,2);
             X = 1:numPoints;
-            beta = nlinfit(X,Y,modelfun,beta0);
+            [beta, R, J, CovB, MSE, ErrorModelInfo] = nlinfit(X,Y,modelfun,beta0);
+            MeanSE(j) = MSE;
             for b=1:4
                 B(j,b) = beta(b);
             end
@@ -366,6 +368,7 @@ for k = 1:1
         legend(num2str(B(1,2)),num2str(B(2,2)),num2str(B(3,2)),num2str(B(4,2)),num2str(B(5,2)),num2str(B(6,2)),num2str(B(7,2)),num2str(B(8,2)),num2str(B(9,2)));
         ylim([0, 1]);
         B
+        MeanSE
 %         figure('name', 'Hearbeat');
 %         for y = 50:numFrames-50
 %              response55 = 

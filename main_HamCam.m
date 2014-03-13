@@ -8,10 +8,10 @@ mkdir(resultsDir);
 
 % infileName = 'more_still_small';
 % infileName = 'JoanneAudreyMultiFace4';
-infileName = 'JoanneSmall';
+infileName = 'janpostrun';
 % infileName = 'eyebook';
-inFile = fullfile(dataDir,strcat(infileName,'.avi'));
-% inFile = fullfile(dataDir,strcat(infileName,'.mp4'));
+% inFile = fullfile(dataDir,strcat(infileName,'.avi'));
+inFile = fullfile(dataDir,strcat(infileName,'.mp4'));
 outfile2 = fullfile(resultsDir,strcat(infileName,'Crop'));
 outfile3 = fullfile(resultsDir,strcat(infileName,'Demo'));
 
@@ -103,6 +103,12 @@ for k = 1:numFaces
     % Detect feature points in the face region.
     points = detectMinEigenFeatures(rgb2gray(videoFrame), 'ROI', faceBox(k,:));
     
+%     figure; 
+%     p = points(38).Location;
+%     videoFrame = insertMarker(videoFrame, p, 'o','Color', 'white');
+%     imshow(videoFrame), hold on, title('Detected features');
+%     plot(points);
+    
     minDist = zeros(size(points,1),size(ExtrapolatedPoint,2));
     
     for i = 1:size(points,1)
@@ -113,8 +119,9 @@ for k = 1:numFaces
     end
 
     [Loc, ind] = min(minDist);
-
+%     ind(3) = 38;
     points = points(ind);
+    
 
     %Display the detected points.
     figure; imshow(videoFrame), hold on, title('Detected features');
@@ -138,27 +145,13 @@ for k = 1:numFaces
     % transformation between the points in the previous and the current frames
     oldPoints = points;
 
-    % Crop = VideoWriter(outfile2);
-    % open(Crop);
-
     frame = 1;
-    % TrackedIndecies = 120;
-    % TrackedIndecies = 543;
-    % numSamples = 5;  %THIS is the parameter to change how many points are used
     numSamples = size(points,1);
-    % TrackedIndecies = zeros(numSamples,1);
-    % [numPoints, xy] = size(points);
-
-    % interval = round(numPoints/numSamples);
 
     for i = 1:numSamples+1
-    %    TrackedIndecies(i) = round(interval*(i-0.5)+1);
        Crop(i) = VideoWriter(strcat(outfile2,num2str(i)));
        open(Crop(i));
     end
-    
-    DemoVid = VideoWriter(outfile3);
-    open(DemoVid);
     
     while ~isDone(videoFileReader)
         % get the next frame
@@ -209,7 +202,7 @@ for k = 1:numFaces
             CropFrame = imcrop(videoFrame, [5 5 11 11]);
             writeVideo(Crop(4), CropFrame);
             %[274 899] RED LED in JoanneSmall.avi
-            redLED(frame-1) = mean(videoFrame(899, 274, :));
+%             redLED(frame-1) = mean(videoFrame(899, 274, :));
 
             videoFrame = insertMarker(videoFrame, visiblePoints, '+', ...
                 'Color', 'white');
@@ -218,8 +211,6 @@ for k = 1:numFaces
             videoFrame = insertMarker(videoFrame, [10 10], '+', ...
                 'Color', 'green');
             
-            writeVideo(DemoVid, videoFrame);
-            
             % Reset the points
             oldPoints = visiblePoints;
             setPoints(pointTracker, oldPoints);
@@ -227,19 +218,8 @@ for k = 1:numFaces
 
         % Display the annotated video frame using the video player object
         step(videoPlayer, videoFrame);
-        %writeVideo(myVideo, videoFrame);
     end
-    
     numFrames = frame;
-
-    % fig1 = figure;
-    % plot(1:frame,Pixels(:,1),'color',[1.0 0.0 0.0]);
-    % 
-    % fig2 = figure;
-    % plot(1:frame,Pixels(:,2),'color',[0.0 1.0 0.0]);
-    % 
-    % fig3 = figure;
-    % plot(1:frame,Pixels(:,3),'color',[0.0 0.0 1.0]);
 
     % Clean up
     release(videoPlayer);
@@ -247,8 +227,6 @@ for k = 1:numFaces
     for i = 1:numSamples+1
         close(Crop(i));
     end
-    close(DemoVid);
-    %close(myVideo);
 
     for i = 1:numSamples+1
         %% Run MIT code on cropped video
@@ -256,23 +234,22 @@ for k = 1:numFaces
         
         filename = strcat(strcat(strcat(infileName,'Crop'),num2str(i)),'.avi');
         inFile = fullfile(resultsDir,filename);
-        fprintf('face %i, sample %i, filter %i of %i/n', k, i, 1, 8);
-        amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,40/60,50/60,30, 0);
-        fprintf('face %i, sample %i, filter %i of %i/n', k, i, 2, 8);
-        amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,50/60,60/60,30, 0);
-        fprintf('face %i, sample %i, filter %i of %i/n', k, i, 3, 8);
-        amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,60/60,70/60,30, 0);
-        fprintf('face %i, sample %i, filter %i of %i/n', k, i, 4, 8);
-        amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,70/60,80/60,30, 0);
-        fprintf('face %i, sample %i, filter %i of %i/n', k, i, 5, 8);
-        amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,80/60,90/60,30, 0);
-        fprintf('face %i, sample %i, filter %i of %i/n', k, i, 6, 8);
-        amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,90/60,100/60,30, 0);
-        fprintf('face %i, sample %i, filter %i of %i/n', k, i, 7, 8);
-        amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,100/60,110/60,30, 0);
-        fprintf('face %i, sample %i, filter %i of %i/n', k, i, 8, 8);
-        amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,110/60,120/60,30, 0);
-    %     amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,3,120/60,240/60,30, 0);
+        fprintf('face %i, sample %i, filter %i of %i\n', k, i, 1, 8);
+        amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,40/60,180/60,30, 0);
+%         fprintf('face %i, sample %i, filter %i of %i\n', k, i, 2, 8);
+%         amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,50/60,60/60,30, 0);
+%         fprintf('face %i, sample %i, filter %i of %i\n', k, i, 3, 8);
+%         amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,60/60,70/60,30, 0);
+%         fprintf('face %i, sample %i, filter %i of %i\n', k, i, 4, 8);
+%         amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,70/60,80/60,30, 0);
+%         fprintf('face %i, sample %i, filter %i of %i\n', k, i, 5, 8);
+%         amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,80/60,90/60,30, 0);
+%         fprintf('face %i, sample %i, filter %i of %i\n', k, i, 6, 8);
+%         amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,90/60,100/60,30, 0);
+%         fprintf('face %i, sample %i, filter %i of %i\n', k, i, 7, 8);
+%         amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,100/60,110/60,30, 0);
+%         fprintf('face %i, sample %i, filter %i of %i\n', k, i, 8, 8);
+%         amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,110/60,120/60,30, 0);
     end
     
     for i = 1:numSamples+1
@@ -280,11 +257,11 @@ for k = 1:numFaces
         G = zeros(8,numFrames);
         modResponse = zeros(8,numFrames);
         responseMean = zeros(8, numFrames);
-        for j = 1:8 % 7 = number of bands
+        for j = 1:1 % 8 = number of bands
             %% Graph data
             switch j
                 case 1
-                    rangeString = '0.66667-to-0.83333';
+                    rangeString = '0.66667-to-3';
                     alpha = 1;
                     colArray = [1 0 0];
                 case 2
@@ -317,44 +294,29 @@ for k = 1:numFaces
                     colArray = [0.1 0.1 0.1];
             end
             filename = strcat(strcat(strcat(infileName,'Crop'),num2str(i)),'-ideal-from-',rangeString,'-alpha-50-level-1-chromAtn-0.avi');
-        %     filename = strcat(strcat(strcat(infileName,'Crop'),num2str(i)),'-ideal-from-2-to-4-alpha-50-level-2-chromAtn-0.avi');
             inFile = fullfile(resultsDir,filename);
 
             videoFileReader = vision.VideoFileReader(inFile);
             videoFrame = step(videoFileReader);
             frame = 1;
-        %     M = mean(mean(mean(videoFrame)));
-            M = mean(videoFrame(5,:,1));
-            G(j, frame) = M;
+            G(j, frame) = mean(videoFrame(5,:,1));
 
             while ~isDone(videoFileReader)
                 videoFrame = step(videoFileReader);
                 frame = frame+1;
-        %         M = mean(mean(mean(videoFrame)));
-                M = mean(videoFrame(5,:,1));
-                G(j,frame) = M;
+                G(j,frame) = mean(videoFrame(5,:,1));
             end
-%             plot(1:frame,G(:),'color',colArray);
-            responseMean = zeros(1, size(G,2));
-            for x = 25:(size(G,2)-25)
-                responseMean(x) = mean(G(j,x-24:x+24));
-                diff = G(j,x) - responseMean(x);
-                modResponse(j, x) = responseMean(x) + alpha*diff;
-            end
-            plot(1:numFrames,modResponse(j,:),'color',colArray);
+            plot(1:size(G,2),G(j,:),'color',colArray);
             hold on;
             ylim([0, 1]);
         end
-        legend('40 to 50','50 to 60', '60 to 70', '70 to 80', '80 to 90', '90 to 100', '100 to 110', '110 to 120');
-%         figure('name', 'Hearbeat');
-%         for y = 50:numFrames-50
-%              response55 = 
-%         end
+        legend('40 to 180');
+%         legend('40 to 50','50 to 60', '60 to 70', '70 to 80', '80 to 90', '90 to 100', '100 to 110', '110 to 120');
     end
-    figure;
-    plot(redLED);
-    ylim([0, 1]);
-    xlim([0 500]);
+%     figure;
+%     plot(redLED);
+%     ylim([0, 1]);
+%     xlim([0 500]);
     for j = 1:numSamples
        figure('name',strcat('Unaltered intensity for point ', num2str(j)));
        plot(original(j,:));

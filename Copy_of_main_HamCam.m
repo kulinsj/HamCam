@@ -64,7 +64,7 @@ numPoints = size(ExtrapolatedPoint,2);
 
 figure; imshow(videoFrame); title('Detected Stuff');
 
-for k = 1:numFaces
+for k = 1:1
     if k > 1
         videoFileReader = vision.VideoFileReader(inFile);
         videoFrame = step(videoFileReader);
@@ -102,8 +102,8 @@ for k = 1:numFaces
     points = points.Location;
     initialize(pointTracker, points, videoFrame);
 
-    videoPlayer  = vision.VideoPlayer('Position',...
-        [100 100 [size(videoFrame, 2), size(videoFrame, 1)]+30]);
+%     videoPlayer  = vision.VideoPlayer('Position',...
+%         [100 100 [size(videoFrame, 2), size(videoFrame, 1)]+30]);
 
     % Make a copy of the points to be used for computing the geometric
     % transformation between the points in the previous and the current frames
@@ -128,8 +128,8 @@ for k = 1:numFaces
        open(Crop(i));
     end
     
-    DemoVid = VideoWriter(outfile3);
-    open(DemoVid);
+%     DemoVid = VideoWriter(outfile3);
+%     open(DemoVid);
     
     while ~isDone(videoFileReader)
         % get the next frame
@@ -189,7 +189,7 @@ for k = 1:numFaces
             videoFrame = insertMarker(videoFrame, [10 10], '+', ...
                 'Color', 'green');
             
-            writeVideo(DemoVid, videoFrame);
+%             writeVideo(DemoVid, videoFrame);
             
             % Reset the points
             oldPoints = visiblePoints;
@@ -197,7 +197,7 @@ for k = 1:numFaces
         end
 
         % Display the annotated video frame using the video player object
-        step(videoPlayer, videoFrame);
+%         step(videoPlayer, videoFrame);
         %writeVideo(myVideo, videoFrame);
     end
     
@@ -213,12 +213,12 @@ for k = 1:numFaces
     % plot(1:frame,Pixels(:,3),'color',[0.0 0.0 1.0]);
 
     % Clean up
-    release(videoPlayer);
+%     release(videoPlayer);
     release(pointTracker);
     for i = 1:numSamples+1
         close(Crop(i));
     end
-    close(DemoVid);
+%     close(DemoVid);
     %close(myVideo);
 
     for i = 1:numSamples+1
@@ -228,101 +228,144 @@ for k = 1:numFaces
         filename = strcat(strcat(strcat(infileName,'Crop'),num2str(i)),'.avi');
         inFileM = fullfile(resultsDir,filename);
         fprintf('face %i, sample %i, filter %i of %i\n', k, i, 1, 9);
-        amplify_spatial_Gdown_temporal_ideal(inFileM,resultsDir,50,1,40/60,50/60,30, 0);
+        amplify_spatial_Gdown_temporal_ideal(inFileM,resultsDir,50,1,0.01,0.06,30, 0);
         fprintf('face %i, sample %i, filter %i of %i\n', k, i, 2, 9);
-        amplify_spatial_Gdown_temporal_ideal(inFileM,resultsDir,50,1,50/60,60/60,30, 0);
-        fprintf('face %i, sample %i, filter %i of %i\n', k, i, 3, 9);
-        amplify_spatial_Gdown_temporal_ideal(inFileM,resultsDir,50,1,60/60,70/60,30, 0);
-        fprintf('face %i, sample %i, filter %i of %i\n', k, i, 4, 9);
-        amplify_spatial_Gdown_temporal_ideal(inFileM,resultsDir,50,1,70/60,80/60,30, 0);
-        fprintf('face %i, sample %i, filter %i of %i\n', k, i, 5, 9);
-        amplify_spatial_Gdown_temporal_ideal(inFileM,resultsDir,50,1,80/60,90/60,30, 0);
-        fprintf('face %i, sample %i, filter %i of %i\n', k, i, 6, 9);
-        amplify_spatial_Gdown_temporal_ideal(inFileM,resultsDir,50,1,90/60,100/60,30, 0);
-        fprintf('face %i, sample %i, filter %i of %i\n', k, i, 7, 9);
-        amplify_spatial_Gdown_temporal_ideal(inFileM,resultsDir,50,1,100/60,110/60,30, 0);
-        fprintf('face %i, sample %i, filter %i of %i\n', k, i, 8, 9);
-        amplify_spatial_Gdown_temporal_ideal(inFileM,resultsDir,50,1,110/60,120/60,30, 0);
-        fprintf('face %i, sample %i, filter %i of %i\n', k, i, 9, 9);
         amplify_spatial_Gdown_temporal_ideal(inFileM,resultsDir,50,1,0.05,0.1,30, 0);
-    %     amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,3,120/60,240/60,30, 0);
+        fprintf('face %i, sample %i, filter %i of %i\n', k, i, 3, 9);
+        amplify_spatial_Gdown_temporal_ideal(inFileM,resultsDir,50,1,0.1,0.15,30, 0);
+        fprintf('face %i, sample %i, filter %i of %i\n', k, i, 4, 9);
+        amplify_spatial_Gdown_temporal_ideal(inFileM,resultsDir,50,1,0.2,0.25,30, 0);
+        fprintf('face %i, sample %i, filter %i of %i\n', k, i, 5, 9);
+        amplify_spatial_Gdown_temporal_ideal(inFileM,resultsDir,50,1,0.3,0.35,30, 0);
+        fprintf('face %i, sample %i, filter %i of %i\n', k, i, 6, 9);
+        amplify_spatial_Gdown_temporal_ideal(inFileM,resultsDir,50,1,0.7,0.75,30, 0);
+        fprintf('face %i, sample %i, filter %i of %i\n', k, i, 7, 9);
+        amplify_spatial_Gdown_temporal_ideal(inFileM,resultsDir,50,1,1,1.05,30, 0);
+        fprintf('face %i, sample %i, filter %i of %i\n', k, i, 8, 9);
+        amplify_spatial_Gdown_temporal_ideal(inFileM,resultsDir,50,1,1.2,1.25,30, 0);
+        fprintf('face %i, sample %i, filter %i of %i\n', k, i, 9, 9);
+        amplify_spatial_Gdown_temporal_ideal(inFileM,resultsDir,50,1,2,2.5,30, 0);
     end
     
     for i = 1:numSamples+1
-        fig1 = figure('name',strcat('Processed heartbeat from sample ', num2str(i), ' for face', num2str(k)));
         G = zeros(9,numFrames);
-        modResponse = zeros(9,numFrames);
-        responseMean = zeros(9, numFrames);
         for j = 1:9 % 9 = number of bands
-            %% Graph data
+            %% Build the data
             switch j
                 case 1
-                    rangeString = '0.66667-to-0.83333';
-                    alpha = 1;
-                    colArray = [1 0 0];
+                    rangeString = '0.01-to-0.06';
                 case 2
-                    rangeString = '0.83333-to-1';
-                    alpha = 1.18;
-                    colArray = [1 0.5 0];
-                case 3
-                    rangeString = '1-to-1.1667';
-                    alpha = 1.35;
-                    colArray = [1 1 0];
-                case 4
-                    rangeString = '1.1667-to-1.3333';
-                    alpha = 1.49;
-                    colArray = [0 1 0];
-                case 5
-                    rangeString = '1.3333-to-1.5';
-                    alpha = 1.60;
-                    colArray = [0 1 1];
-                case 6
-                    rangeString = '1.5-to-1.6667';
-                    alpha = 1.7;
-                    colArray = [0 0 1];
-                case 7
-                    rangeString = '1.6667-to-1.8333';
-                    alpha = 1.77;
-                    colArray = [1 0 1];
-                case 8
-                    rangeString = '1.8333-to-2';
-                    alpha = 1.87;
-                    colArray = [1 0.5 1];
-                case 9
                     rangeString = '0.05-to-0.1';
-                    alpha = 1;
-                    colArray = [0.1 0.1 0.1];
+                case 3
+                    rangeString = '0.1-to-0.15';
+                case 4
+                    rangeString = '0.2-to-0.25';
+                case 5
+                    rangeString = '0.3-to-0.35';
+                case 6
+                    rangeString = '0.7-to-0.75';
+                case 7
+                    rangeString = '1-to-1.05';
+                case 8
+                    rangeString = '1.2-to-1.25';
+                case 9
+                    rangeString = '2-to-2.5';
             end
             filename = strcat(strcat(strcat(infileName,'Crop'),num2str(i)),'-ideal-from-',rangeString,'-alpha-50-level-1-chromAtn-0.avi');
-        %     filename = strcat(strcat(strcat(infileName,'Crop'),num2str(i)),'-ideal-from-2-to-4-alpha-50-level-2-chromAtn-0.avi');
             inFileG = fullfile(resultsDir,filename);
 
             videoFileReader = vision.VideoFileReader(inFileG);
             videoFrame = step(videoFileReader);
             frame = 1;
-        %     M = mean(mean(mean(videoFrame)));
-            M = mean(videoFrame(5,:,1));
-            G(j, frame) = M;
+            G(j, frame) = mean(videoFrame(5,:,1));
 
             while ~isDone(videoFileReader)
                 videoFrame = step(videoFileReader);
-                frame = frame+1;
-        %         M = mean(mean(mean(videoFrame)));
-                M = mean(videoFrame(5,:,1));
-                G(j,frame) = M;
+                frame = frame + 1;
+                G(j,frame) = mean(videoFrame(5,:,1));
+            end
+        end
+        
+        fig1 = figure('name',strcat('Processed heartbeat from sample ', num2str(i), ' for face', num2str(k)));
+        for j = 1:9  %plot the original gathered data
+            switch j
+                case 1
+                    colArray = [1 0 0];
+                case 2
+                    colArray = [1 0.5 0];
+                case 3
+                    colArray = [1 1 0];
+                case 4
+                    colArray = [0 1 0];
+                case 5
+                    colArray = [0 1 1];
+                case 6
+                    colArray = [0 0 1];
+                case 7
+                    colArray = [1 0 1];
+                case 8
+                    colArray = [1 0.5 1];
+                case 9
+                    colArray = [0.1 0.1 0.1];
             end
             plot(1:numFrames,G(j,:),'color',colArray);
-            responseMean = zeros(1, size(G,2));
-            for x = 25:(size(G,2)-25)
-                responseMean(x) = mean(G(j,x-24:x+24));
-                diff = G(j,x) - responseMean(x);
-                modResponse(j, x) = responseMean(x) + alpha*diff;
-            end
-%             plot(1:numFrames,modResponse(j,:),'color',colArray);
             hold on;
-            ylim([0, 1]);
         end
-        legend('40 to 50','50 to 60', '60 to 70', '70 to 80', '80 to 90', '90 to 100', '100 to 110', '110 to 120', '0.05 to 0.1Hz');
+        ylim([0, 1]);
+        legend('0.01-to-0.05','0.05-to-0.1', '0.1-to-0.15', '0.2-to-0.25', '0.3-to-0.35', '0.7-to-0.75', '1-to-1.05', '1.2-to-1.25', '2-to-2.5');
+        
+        
+        modelfun = @(b,x)(b(1)+b(2)*sin(b(3)+b(4)*x));
+        beta0 = [0.5;0.15;0.2;0.01]; %Guess at initial params of sine functions
+        B = zeros(9,4);
+        div = 77;
+        figure('name',strcat('Fit curves for sample ', num2str(i), ' for face', num2str(k)));
+        for j = 1:9  %plot the fit curves
+            b1 = mean(G(j,:));
+            b2 = var(G(j,:));
+            switch j
+                case 1
+                    colArray = [1 0 0];
+                    beta0 = [b1;b2;1;1/div];
+                case 2
+                    colArray = [1 0.5 0];
+                    beta0 = [b1;b2;1;1/div];
+                case 3
+                    colArray = [1 1 0];
+                    beta0 = [b1;b2;1;2/div];
+                case 4
+                    colArray = [0 1 0];
+                    beta0 = [b1;b2;1;4/div];
+                case 5
+                    colArray = [0 1 1];
+                    beta0 = [b1;b2;1;5/div];
+                case 6
+                    colArray = [0 0 1];
+                    beta0 = [b1;b2;1;11/div];
+                case 7
+                    colArray = [1 0 1];
+                    beta0 = [b1;b2;1;26/div];
+                case 8
+                    colArray = [1 0.5 1];
+                    beta0 = [b1;b2;1;29/div];
+                case 9
+                    colArray = [0.1 0.1 0.1];
+                    beta0 = [b1;b2;1;38/div];
+            end
+            Y = G(j,find(G(j,:),1,'first'):find(G(j,:),1,'last'));
+            numPoints = size(Y,2);
+            X = 1:numPoints;
+            beta = nlinfit(X,Y,modelfun,beta0);
+            for b=1:4
+                B(j,b) = beta(b);
+            end
+            toPlot = (beta(1)+beta(2)*sin(beta(3)+beta(4)*X));
+            plot(toPlot, 'color',colArray);
+            hold on;
+        end
+        legend(num2str(B(1,2)),num2str(B(2,2)),num2str(B(3,2)),num2str(B(4,2)),num2str(B(5,2)),num2str(B(6,2)),num2str(B(7,2)),num2str(B(8,2)),num2str(B(9,2)));
+        ylim([0, 1]);
+        B
 %         figure('name', 'Hearbeat');
 %         for y = 50:numFrames-50
 %              response55 = 

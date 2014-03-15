@@ -7,8 +7,8 @@ resultsDir = 'Results';
 mkdir(resultsDir);
 
 % infileName = 'more_still_small';
-% infileName = 'JoanneAudreyMultiFace4';
-infileName = 'janpostrun';
+infileName = 'JoanneAudreyMultiFace4';
+% infileName = 'janpostrun';
 % infileName = 'eyebook';
 % inFile = fullfile(dataDir,strcat(infileName,'.avi'));
 inFile = fullfile(dataDir,strcat(infileName,'.mp4'));
@@ -94,7 +94,8 @@ figure; imshow(videoFrame); title('Detected Stuff');
 
 for k = 1:numFaces
     if k > 1
-        inFile = fullfile(dataDir,strcat(infileName,'.avi'));
+% %         inFile = fullfile(dataDir,strcat(infileName,'.avi'));
+%         inFile = fullfile(dataDir,strcat(infileName,'.mp4'));
         videoFileReader = vision.VideoFileReader(inFile);
         videoFrame = step(videoFileReader);
         imshow(videoFrame);
@@ -233,9 +234,9 @@ for k = 1:numFaces
         %inFile = fullfile(dataDir,'JoanneSmallCrop.avi');
         
         filename = strcat(strcat(strcat(infileName,'Crop'),num2str(i)),'.avi');
-        inFile = fullfile(resultsDir,filename);
+        inFile_Sample = fullfile(resultsDir,filename);
         fprintf('face %i, sample %i, filter %i of %i\n', k, i, 1, 8);
-        amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,40/60,180/60,30, 0);
+        amplify_spatial_Gdown_temporal_ideal(inFile_Sample,resultsDir,50,1,40/60,180/60,30, 0);
 %         fprintf('face %i, sample %i, filter %i of %i\n', k, i, 2, 8);
 %         amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,50/60,60/60,30, 0);
 %         fprintf('face %i, sample %i, filter %i of %i\n', k, i, 3, 8);
@@ -294,9 +295,9 @@ for k = 1:numFaces
                     colArray = [0.1 0.1 0.1];
             end
             filename = strcat(strcat(strcat(infileName,'Crop'),num2str(i)),'-ideal-from-',rangeString,'-alpha-50-level-1-chromAtn-0.avi');
-            inFile = fullfile(resultsDir,filename);
+            inFile_Processed = fullfile(resultsDir,filename);
 
-            videoFileReader = vision.VideoFileReader(inFile);
+            videoFileReader = vision.VideoFileReader(inFile_Processed);
             videoFrame = step(videoFileReader);
             frame = 1;
             G(j, frame) = mean(videoFrame(5,:,1));

@@ -8,7 +8,7 @@ mkdir(resultsDir);
 
 % infileName = 'more_still_small';
 % infileName = 'JoanneAudreyMultiFace4';
-infileName = 'janpostrun';
+infileName = 'face';
 % infileName = 'eyebook';
 % inFile = fullfile(dataDir,strcat(infileName,'.avi'));
 inFile = fullfile(dataDir,strcat(infileName,'.mp4'));
@@ -119,7 +119,7 @@ for k = 1:numFaces
     end
 
     [Loc, ind] = min(minDist);
-%     ind(3) = 38;
+    ind(3) = 38;
     points = points(ind);
     
 
@@ -234,8 +234,8 @@ for k = 1:numFaces
         
         filename = strcat(strcat(strcat(infileName,'Crop'),num2str(i)),'.avi');
         inFile = fullfile(resultsDir,filename);
-        fprintf('face %i, sample %i, filter %i of %i\n', k, i, 1, 8);
-        amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,40/60,180/60,30, 0);
+        fprintf('face %i, sample %i, filter %i of %i\n', k, i, 1, 1);
+        amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,40/60,60/60,30, 0);
 %         fprintf('face %i, sample %i, filter %i of %i\n', k, i, 2, 8);
 %         amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,50/60,60/60,30, 0);
 %         fprintf('face %i, sample %i, filter %i of %i\n', k, i, 3, 8);
@@ -252,67 +252,39 @@ for k = 1:numFaces
 %         amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,110/60,120/60,30, 0);
     end
     
+    numPeaks = zeros(numFaces, numSamples+1);
+    pulse = zeros(numFaces, numSamples+1);
     for i = 1:numSamples+1
         fig1 = figure('name',strcat('Processed heartbeat from sample ', num2str(i), ' for face', num2str(k)));
-        G = zeros(8,numFrames);
-        modResponse = zeros(8,numFrames);
-        responseMean = zeros(8, numFrames);
-        for j = 1:1 % 8 = number of bands
-            %% Graph data
-            switch j
-                case 1
-                    rangeString = '0.66667-to-3';
-                    alpha = 1;
-                    colArray = [1 0 0];
-                case 2
-                    rangeString = '0.83333-to-1';
-                    alpha = 1.18;
-                    colArray = [1 0.5 0];
-                case 3
-                    rangeString = '1-to-1.1667';
-                    alpha = 1.35;
-                    colArray = [1 1 0];
-                case 4
-                    rangeString = '1.1667-to-1.3333';
-                    alpha = 1.49;
-                    colArray = [0 1 0];
-                case 5
-                    rangeString = '1.3333-to-1.5';
-                    alpha = 1.60;
-                    colArray = [0 1 1];
-                case 6
-                    rangeString = '1.5-to-1.6667';
-                    alpha = 1.7;
-                    colArray = [0 0 1];
-                case 7
-                    rangeString = '1.6667-to-1.8333';
-                    alpha = 1.77;
-                    colArray = [1 0 1];
-                case 8
-                    rangeString = '1.8333-to-2';
-                    alpha = 1.87;
-                    colArray = [0.1 0.1 0.1];
-            end
-            filename = strcat(strcat(strcat(infileName,'Crop'),num2str(i)),'-ideal-from-',rangeString,'-alpha-50-level-1-chromAtn-0.avi');
-            inFile = fullfile(resultsDir,filename);
+        G = zeros(1,numFrames);
+        rangeString = '0.66667-to-1';
+        colArray = [1 0 0];
+        filename = strcat(strcat(strcat(infileName,'Crop'),num2str(i)),'-ideal-from-',rangeString,'-alpha-50-level-1-chromAtn-0.avi');
+        inFile = fullfile(resultsDir,filename);
 
-            videoFileReader = vision.VideoFileReader(inFile);
+        videoFileReader = vision.VideoFileReader(inFile);
+        videoFrame = step(videoFileReader);
+        frame = 1;
+        G(frame) = mean(videoFrame(5,:,1));
+
+        while ~isDone(videoFileReader)
             videoFrame = step(videoFileReader);
-            frame = 1;
-            G(j, frame) = mean(videoFrame(5,:,1));
-
-            while ~isDone(videoFileReader)
-                videoFrame = step(videoFileReader);
-                frame = frame+1;
-                G(j,frame) = mean(videoFrame(5,:,1));
-            end
-            plot(1:size(G,2),G(j,:),'color',colArray);
-            hold on;
-            ylim([0, 1]);
+            frame = frame+1;
+            G(frame) = mean(videoFrame(5,:,1));
         end
-        legend('40 to 180');
-%         legend('40 to 50','50 to 60', '60 to 70', '70 to 80', '80 to 90', '90 to 100', '100 to 110', '110 to 120');
+        G = G(1:find(G,1,'last'));
+        plot(1:size(G,2),G(:),'color',colArray);
+
+        hold on;
+        ylim([0, 1]);
+%         legend('40 to 60');
+        [peaks, locs] = findpeaks(G,'MINPEAKDISTANCE',10);
+        scatter(locs, G(locs));
+        numPeaks(k,i) = size(peaks,2);
+        pulse(k,i) = size(peaks,2)*60*30/numFrames;
     end
+    numPeaks
+    pulse
 %     figure;
 %     plot(redLED);
 %     ylim([0, 1]);

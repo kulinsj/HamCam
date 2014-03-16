@@ -8,10 +8,10 @@ mkdir(resultsDir);
 
 % infileName = 'more_still_small';
 % infileName = 'JoanneAudreyMultiFace4';
-infileName = 'face';
+infileName = 'JoanneSmall';
 % infileName = 'eyebook';
-% inFile = fullfile(dataDir,strcat(infileName,'.avi'));
-inFile = fullfile(dataDir,strcat(infileName,'.mp4'));
+inFile = fullfile(dataDir,strcat(infileName,'.avi'));
+% inFile = fullfile(dataDir,strcat(infileName,'.mp4'));
 outfile2 = fullfile(resultsDir,strcat(infileName,'Crop'));
 outfile3 = fullfile(resultsDir,strcat(infileName,'Demo'));
 
@@ -116,7 +116,7 @@ for k = 1:numFaces
     end
 
     [Loc, ind] = min(minDist);
-    ind(3) = 38;
+%     ind(3) = 38;
     points = points(ind);
     
 
@@ -199,7 +199,7 @@ for k = 1:numFaces
             CropFrame = imcrop(videoFrame, [5 5 11 11]);
             writeVideo(Crop(4), CropFrame);
             %[274 899] RED LED in JoanneSmall.avi
-%             redLED(frame-1) = mean(videoFrame(899, 274, :));
+            redLED(frame-1) = mean(videoFrame(899, 274, :));
 
             videoFrame = insertMarker(videoFrame, visiblePoints, '+', ...
                 'Color', 'white');
@@ -225,61 +225,86 @@ for k = 1:numFaces
         close(Crop(i));
     end
     
-    %%Initialize Optimization
-    alpha0 = 50;
-    flow0 = 40/60;
-    fhigh0 = 180/60;
-    chromeAttn0 = 0;
+    %% Only run this if using the Red LED
+    [LEDpeaks, LEDlocs] = findpeaks(double(redLED),'MINPEAKDISTANCE',10, 'MINPEAKHEIGHT', 0.5);
+    figure('name','Red LED signal');
+    actualPeaks = size(LEDpeaks,2);
+    plot(redLED);
+    hold on;
+    scatter(LEDlocs, redLED(LEDlocs));
+    ylim([0, 1]);
     
-    alpha = alpha0;
-    flow = flow0;
-    fhigh = fhigh0;
-    chromeAttn = chromeAttn0;
+    %%Initialize Optimization
+    flow0 = 0.622;
+    fhigh0 = 1.6972;
+    
+    x0 = [ flow0; fhigh0; numSamples; actualPeaks];
+    A = [ 1 0 0 0;
+        -1 0 0 0;
+        0 1 0 0;
+        0 -1 0 0;
+        1 -1 0 0];
+    b = [3; -0.58; 3.1; -0.62; -0.05];
+    
+    Aeq = [0 0 1 0 ;
+           0 0 0 1 ];
+    beq = [numSamples; actualPeaks];   
+    
+    options = optimoptions('fmincon');
+%     options.MaxFunEvals = 40;
+    options.DiffMinChange = 0.1;
+    options.MaxIter = 10;
+    options.MaxFunEvals = 18;
+    options.Display = 'iter';
+    
+    
+    X = fmincon(@objectiveFunction, x0, A, b, Aeq, beq,[],[],[],options);
+    X
+    alpha = 50;
+    flow = X(1);
+    fhigh = X(2);
     
     for i = 1:numSamples+1
         %% Run MIT code on cropped video
         filename = strcat(strcat(strcat(infileName,'Crop'),num2str(i)),'.avi');
         inFile_Sample = fullfile(resultsDir,filename);
         fprintf('face %i of %i, sample %i of %i, filter %i of %i\n', k, numFaces, i, numSamples+1 , 1, 1);
-        amplify_spatial_Gdown_temporal_ideal(inFile_Sample,resultsDir,alpha,2,flow,fhigh,30, chromeAttn);
+        amplify_spatial_Gdown_temporal_ideal(inFile_Sample,resultsDir,alpha,2,flow,fhigh,30, 0);
     end
     
-    numPeaks = zeros(numFaces, numSamples+1);
-    pulse = zeros(numFaces, numSamples+1);
+    numPeaksG = zeros(numFaces, numSamples+1);
+    pulseG = zeros(numFaces, numSamples+1);
     for i = 1:numSamples+1
-        fig1 = figure('name',strcat('Processed heartbeat from sample ', num2str(i), ' for face', num2str(k)));
         G = zeros(1,numFrames);
         rangeString = strcat(num2str(flow),'-to-',num2str(fhigh));
-        filename = strcat(infileName, 'Crop', num2str(i), '-ideal-from-',rangeString,'-alpha-',num2str(alpha),'-level-2-chromAtn-',num2str(chromeAttn),'.avi');
+        filename = strcat(infileName, 'Crop', num2str(i), '-ideal-from-',rangeString,'-alpha-',num2str(alpha),'-level-2-chromAtn-0.avi');
         inFile_Processed = fullfile(resultsDir,filename);
 
         videoFileReader = vision.VideoFileReader(inFile_Processed);
         videoFrame = step(videoFileReader);
         frame = 1;
-        G(frame) = mean(videoFrame(5,:,1));
-
+        G(frame) = mean(mean(videoFrame(:,:,1)));
+        
         while ~isDone(videoFileReader)
             videoFrame = step(videoFileReader);
             frame = frame+1;
-            G(frame) = mean(videoFrame(5,:,1));
+            G(frame) = mean(mean(videoFrame(:,:,1)));
         end
-        G = G(1:find(G,1,'last'));
+        G = G(1:find(G,1,'last')); %trim zeros
+        G = filter(ones(1,5)/5,1,G); %smooth
+        
+        fig1 = figure('name',strcat('Processed heartbeat from sample ', num2str(i), ' for face', num2str(k)));
         plot(1:size(G,2),G(:),'color',[1 0 0]);
-
         hold on;
         ylim([0, 1]);
-%         legend('40 to 60');
-        [peaks, locs] = findpeaks(G,'MINPEAKDISTANCE',10, 'THRESHOLD', var(G));
+        legend(strcat(num2str(flow*60),' to ', num2str(fhigh*60)));
+        [peaks, locs] = findpeaks(G,'MINPEAKDISTANCE',10);
         scatter(locs, G(locs));
-        numPeaks(k,i) = size(peaks,2);
-        pulse(k,i) = size(peaks,2)*60*30/size(G,2);
+        numPeaksG(k,i) = size(peaks,2);
+        pulseG(k,i) = size(peaks,2)*60*30/size(G,2);
     end
-    numPeaks
-    pulse
-%     figure;
-%     plot(redLED);
-%     ylim([0, 1]);
-%     xlim([0 500]);
+    numPeaksG
+    pulseG
     for j = 1:numSamples
        figure('name',strcat('Unaltered intensity for point ', num2str(j)));
        plot(original(j,:));

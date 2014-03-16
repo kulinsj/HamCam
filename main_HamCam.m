@@ -8,7 +8,7 @@ mkdir(resultsDir);
 
 % infileName = 'more_still_small';
 % infileName = 'JoanneAudreyMultiFace4';
-infileName = 'JoanneSmall';
+infileName = 'audreybeforeBetter';
 % infileName = 'eyebook';
 inFile = fullfile(dataDir,strcat(infileName,'.avi'));
 % inFile = fullfile(dataDir,strcat(infileName,'.mp4'));
@@ -17,8 +17,8 @@ outfile3 = fullfile(resultsDir,strcat(infileName,'Demo'));
 
 % Create a cascade detector object.
 faceDetector = vision.CascadeObjectDetector();
-bigEyePairDetector = vision.CascadeObjectDetector('EyePairBig');
-% bigEyePairDetector = vision.CascadeObjectDetector('EyePairSmall');
+% bigEyePairDetector = vision.CascadeObjectDetector('EyePairBig');
+bigEyePairDetector = vision.CascadeObjectDetector('EyePairSmall');
 bigEyePairDetector.MergeThreshold = 1;
 % smallEyePairDetector.MergeThreshold = 1;
 % mouthDetector = vision.CascadeObjectDetector('Mouth'); 
@@ -199,7 +199,10 @@ for k = 1:numFaces
             CropFrame = imcrop(videoFrame, [5 5 11 11]);
             writeVideo(Crop(4), CropFrame);
             %[274 899] RED LED in JoanneSmall.avi
-            redLED(frame-1) = mean(videoFrame(899, 274, :));
+            LEDX = 64;
+            LEDY = 361;
+            redLED(frame-1) = mean(videoFrame(LEDY, LEDX, :));
+            videoFrame = insertMarker(videoFrame, [LEDX LEDY], '+', 'Color', 'red');
 
             videoFrame = insertMarker(videoFrame, visiblePoints, '+', ...
                 'Color', 'white');
@@ -233,32 +236,29 @@ for k = 1:numFaces
     hold on;
     scatter(LEDlocs, redLED(LEDlocs));
     ylim([0, 1]);
+
+%     actualPeaks = 25;
     
     %%Initialize Optimization
     flow0 = 0.622;
     fhigh0 = 1.6972;
     
-    x0 = [ flow0; fhigh0; numSamples; actualPeaks];
-    A = [ 1 0 0 0;
-        -1 0 0 0;
-        0 1 0 0;
-        0 -1 0 0;
-        1 -1 0 0];
-    b = [3; -0.58; 3.1; -0.62; -0.05];
-    
-    Aeq = [0 0 1 0 ;
-           0 0 0 1 ];
-    beq = [numSamples; actualPeaks];   
+    x0 = [ flow0; fhigh0];
+    A = [ 1 0;
+        -1 0;
+        0 1;
+        0 -1;
+        1 -1];
+    b = [3; -0.4; 40; -0.62; -0.05];
     
     options = optimoptions('fmincon');
 %     options.MaxFunEvals = 40;
     options.DiffMinChange = 0.1;
-    options.MaxIter = 10;
-    options.MaxFunEvals = 18;
+    options.MaxIter = 2;
     options.Display = 'iter';
     
     
-    X = fmincon(@objectiveFunction, x0, A, b, Aeq, beq,[],[],[],options);
+    X = fmincon(@(x) objectiveFunction(x, LEDlocs), x0, A, b, [], [],[],[],[],options);
     X
     alpha = 50;
     flow = X(1);
@@ -291,7 +291,7 @@ for k = 1:numFaces
             G(frame) = mean(mean(videoFrame(:,:,1)));
         end
         G = G(1:find(G,1,'last')); %trim zeros
-        G = filter(ones(1,5)/5,1,G); %smooth
+        G = filter(ones(1,7)/7,1,G); %smooth
         
         fig1 = figure('name',strcat('Processed heartbeat from sample ', num2str(i), ' for face', num2str(k)));
         plot(1:size(G,2),G(:),'color',[1 0 0]);

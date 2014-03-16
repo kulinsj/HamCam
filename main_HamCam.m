@@ -200,7 +200,7 @@ for k = 1:numFaces
             writeVideo(Crop(4), CropFrame);
             %[274 899] RED LED in JoanneSmall.avi
             LEDX = 64;
-            LEDY = 361;
+            LEDY = 360;
             redLED(frame-1) = mean(videoFrame(LEDY, LEDX, :));
             videoFrame = insertMarker(videoFrame, [LEDX LEDY], '+', 'Color', 'red');
 

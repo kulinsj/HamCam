@@ -1,0 +1,19 @@
+audreybeforeBetter
+LEDX = 64;
+LEDY = 360;
+expected pulse = 70;
+
+audreyafterBetter
+LEDX = 64;
+LEDY = 397;
+expected pulse = 156.5;
+
+janbeforeBetter
+LEDX = 98;
+LEDY = 443;
+expected pulse = 59;
+
+janafterBetter
+LEDX = 161;
+LEDY = 444;
+expected pulse = 133.7;

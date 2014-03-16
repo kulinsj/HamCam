@@ -7,6 +7,9 @@ resultsDir = 'Results';
 mkdir(resultsDir);
 
 infileName = 'audreybeforeBetter';
+LEDX = 64;
+LEDY = 360;
+validationMinPeakDist = 10;
 inFile = fullfile(dataDir,strcat(infileName,'.avi'));
 % inFile = fullfile(dataDir,strcat(infileName,'.mp4'));
 
@@ -196,8 +199,6 @@ for k = 1:numFaces
             CropFrame = imcrop(videoFrame, [5 5 11 11]);
             writeVideo(Crop(4), CropFrame);
             %[274 899] RED LED in JoanneSmall.avi
-            LEDX = 64;
-            LEDY = 360;
             redLED(frame-1) = mean(videoFrame(LEDY, LEDX, :));
             videoFrame = insertMarker(videoFrame, [LEDX LEDY], '+', 'Color', 'red');
 
@@ -226,9 +227,10 @@ for k = 1:numFaces
     end
     
     %% Only run this if using the Red LED
-    [LEDpeaks, LEDlocs] = findpeaks(double(redLED),'MINPEAKDISTANCE',10, 'MINPEAKHEIGHT', 0.5);
+    [LEDpeaks, LEDlocs] = findpeaks(double(redLED),'MINPEAKDISTANCE',validationMinPeakDist, 'MINPEAKHEIGHT', 0.5);
     figure('name','Red LED signal');
     actualPeaks = size(LEDpeaks,2);
+    actualBPM = 60*actualPeaks*30/numFrames
     plot(redLED);
     hold on;
     scatter(LEDlocs, redLED(LEDlocs));
@@ -378,10 +380,10 @@ for k = 1:numFaces
 
     numPeaksG
     pulseG
-    figure;
-    plot(redLED);
-    ylim([0, 1]);
-    xlim([0 500]);
+%     figure;
+%     plot(redLED);
+%     ylim([0, 1]);
+%     xlim([0 500]);
 %     for j = 1:numSamples
 %        figure('name',strcat('Unaltered intensity for point ', num2str(j)));
 %        plot(original(j,:));

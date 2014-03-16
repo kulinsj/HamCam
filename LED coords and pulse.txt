@@ -17,3 +17,23 @@ janafterBetter
 LEDX = 161;
 LEDY = 444;
 expected pulse = 133.7;
+
+joannebeforeBetter
+LEDX = 160;
+LEDY = 532;
+expected pulse = 82;
+
+joanneafterBetter
+LEDX = 141;
+LEDY = 531;
+expected pulse = 132.6;
+
+janbefore2Better
+LEDX = 140;
+LEDY = 515;
+expected pulse = 52.4;
+
+janafter2Better
+LEDX = 189;
+LEDY = 515;
+expected pulse = 124;

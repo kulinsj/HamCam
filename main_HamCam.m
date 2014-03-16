@@ -8,8 +8,10 @@ mkdir(resultsDir);
 
 % infileName = 'more_still_small';
 % infileName = 'JoanneAudreyMultiFace4';
-infileName = 'face';
+% infileName = 'face';
 % infileName = 'eyebook';
+% infileName = 'JoanneSmall';
+infileName = 'janpostrun';
 % inFile = fullfile(dataDir,strcat(infileName,'.avi'));
 inFile = fullfile(dataDir,strcat(infileName,'.mp4'));
 outfile2 = fullfile(resultsDir,strcat(infileName,'Crop'));
@@ -120,7 +122,7 @@ for k = 1:numFaces
     end
 
     [Loc, ind] = min(minDist);
-    ind(3) = 38;
+    ind(3) = 37;
     points = points(ind);
     
 
@@ -236,7 +238,10 @@ for k = 1:numFaces
         filename = strcat(strcat(strcat(infileName,'Crop'),num2str(i)),'.avi');
         inFile_Sample = fullfile(resultsDir,filename);
         fprintf('face %i, sample %i, filter %i of %i\n', k, i, 1, 1);
-        amplify_spatial_Gdown_temporal_ideal(inFile_Sample,resultsDir,50,1,40/60,180/60,30, 0);
+%         amplify_spatial_Gdown_temporal_ideal(inFile_Sample,resultsDir,50,1,40/60,180/60,30, 0);
+
+        % Resting heart rate band
+        amplify_spatial_Gdown_temporal_ideal(inFile_Sample,resultsDir,100,1,120/60,140/60,30, 0);
 %         fprintf('face %i, sample %i, filter %i of %i\n', k, i, 2, 8);
 %         amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,50/60,60/60,30, 0);
 %         fprintf('face %i, sample %i, filter %i of %i\n', k, i, 3, 8);
@@ -253,25 +258,39 @@ for k = 1:numFaces
 %         amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,110/60,120/60,30, 0);
     end
     
+    
     numPeaks = zeros(numFaces, numSamples+1);
     pulse = zeros(numFaces, numSamples+1);
+    mean_r = zeros(numSamples+1,numFrames);
+    mean_g = zeros(numSamples+1,numFrames);
+    mean_b = zeros(numSamples+1,numFrames);
     for i = 1:numSamples+1
-        fig1 = figure('name',strcat('Processed heartbeat from sample ', num2str(i), ' for face', num2str(k)));
+%         fig1 = figure('name',strcat('Processed heartbeat from sample ', num2str(i), ' for face', num2str(k)));
         G = zeros(1,numFrames);
-        rangeString = '0.66667-to-1';
+%         rangeString = '0.66667-to-3';
+    rangeString = '2-to-2.3333';
         colArray = [1 0 0];
-        filename = strcat(strcat(strcat(infileName,'Crop'),num2str(i)),'-ideal-from-',rangeString,'-alpha-50-level-1-chromAtn-0.avi');
+%         filename = strcat(strcat(strcat(infileName,'Crop'),num2str(i)),'-ideal-from-',rangeString,'-alpha-50-level-1-chromAtn-0.avi');
+        filename = strcat(strcat(strcat(infileName,'Crop'),num2str(i)),'-ideal-from-',rangeString,'-alpha-100-level-1-chromAtn-0.avi');
         inFile_Processed = fullfile(resultsDir,filename);
 
         videoFileReader = vision.VideoFileReader(inFile_Processed);
         videoFrame = step(videoFileReader);
         frame = 1;
         G(frame) = mean(videoFrame(5,:,1));
+        
+        mean_r(i,frame) = mean(mean(videoFrame(:,:,1)));
+        mean_g(i,frame) = mean(mean(videoFrame(:,:,2)));
+        mean_b(i,frame) = mean(mean(videoFrame(:,:,3)));
 
         while ~isDone(videoFileReader)
             videoFrame = step(videoFileReader);
             frame = frame+1;
             G(frame) = mean(videoFrame(5,:,1));
+            
+            mean_r(i,frame) = mean(mean(videoFrame(:,:,1)));
+            mean_g(i,frame) = mean(mean(videoFrame(:,:,2)));
+            mean_b(i,frame) = mean(mean(videoFrame(:,:,3)));
         end
         G = G(1:find(G,1,'last'));
         plot(1:size(G,2),G(:),'color',colArray);
@@ -284,16 +303,75 @@ for k = 1:numFaces
         numPeaks(k,i) = size(peaks,2);
         pulse(k,i) = size(peaks,2)*60*30/numFrames;
     end
+    mean_r = mean_r(1:numSamples,:);
+    mean_g = mean_g(1:numSamples,:);
+    mean_b = mean_b(1:numSamples,:);
+    
+    % ICA (assume 9 signals)
+    addpath('./FastICA_2.5');
+    sig = [mean_r(1,:); mean_r(2,:); mean_r(3,:); mean_g(1,:); mean_g(2,:); mean_g(3,:); mean_b(1,:); mean_b(2,:); mean_b(3,:)];
+%     sig = [mean_r(1,:); mean_g(1,:); mean_b(1,:)];
+    [decomp] = fastica(sig);
+%     [decomp] = jadeR(sig,3);
+%     decomp = decomp*sig;
+    
+    F = fft(decomp,[],2);
+    
+    figure;
+    plot(1:(size(F,2)-1),abs(F(:,2:end)));
+    
+    fps = 30;
+    f = fps/size(F,2) * (0:floor(size(F,2)/2)-1);
+    
+    [~,freq] = max(abs(F(:,2:end)),[],2);
+    ICA_post = f(freq+1)*60
+%     ICA_post1 = f(freq+1)*60;
+%     
+%     
+%     
+%     sig = [mean_r(2,:); mean_g(2,:); mean_b(2,:)];
+%     [decomp] = fastica(sig);
+%     
+%     F = fft(decomp,[],2);
+%     
+%     figure;
+%     plot(1:(size(F,2)-1),abs(F(:,2:end)));
+%     
+%     fps = 30;
+%     f = fps/size(F,2) * (0:floor(size(F,2)/2)-1);
+%     
+%     [~,freq] = max(abs(F(:,2:end)),[],2);
+%     ICA_post2 = f(freq+1)*60;
+%     
+%     
+%     
+%     sig = [mean_r(3,:); mean_g(3,:); mean_b(3,:)];
+%     [decomp] = fastica(sig);
+%     
+%     F = fft(decomp,[],2);
+%     
+%     figure;
+%     plot(1:(size(F,2)-1),abs(F(:,2:end)));
+%     
+%     fps = 30;
+%     f = fps/size(F,2) * (0:floor(size(F,2)/2)-1);
+%     
+%     [~,freq] = max(abs(F(:,2:end)),[],2);
+%     ICA_post3 = f(freq+1)*60;
+% 
+%     ICA_post = [ICA_post1; ICA_post2; ICA_post3]
+    
+
     numPeaks
     pulse
 %     figure;
 %     plot(redLED);
 %     ylim([0, 1]);
 %     xlim([0 500]);
-    for j = 1:numSamples
-       figure('name',strcat('Unaltered intensity for point ', num2str(j)));
-       plot(original(j,:));
-       ylim([0, 1]);
-       xlim([0 500]);
-    end
+%     for j = 1:numSamples
+%        figure('name',strcat('Unaltered intensity for point ', num2str(j)));
+%        plot(original(j,:));
+%        ylim([0, 1]);
+%        xlim([0 500]);
+%     end
 end

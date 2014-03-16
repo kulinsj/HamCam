@@ -10,6 +10,12 @@ infileName = 'audreybeforeBetter';
 LEDX = 64;
 LEDY = 360;
 validationMinPeakDist = 10;
+
+flow0 = 65/60;
+fhigh0 =85/60;
+
+pulse_range = [50 180];
+
 inFile = fullfile(dataDir,strcat(infileName,'.avi'));
 % inFile = fullfile(dataDir,strcat(infileName,'.mp4'));
 
@@ -70,8 +76,8 @@ for i = 1:numFaces
     pairEyeBoxBigPoly = [eyePairBigX, eyePairBigY, eyePairBigX+eyePairBigW, eyePairBigY, eyePairBigX+eyePairBigW, eyePairBigY+eyePairBigH, eyePairBigX, eyePairBigY+eyePairBigH];
     videoFrame = insertShape(videoFrame, 'Polygon', pairEyeBoxBigPoly, 'Color', [1,0,1]);
     
-    ExtrapolatedPoint(i,1:3,1:2) = [eyePairBigX + eyePairBigW/4, eyePairBigY + eyePairBigH*1.2; ...
-        eyePairBigX + 3*eyePairBigW/4, eyePairBigY + eyePairBigH*1.2; ...
+    ExtrapolatedPoint(i,1:3,1:2) = [eyePairBigX + eyePairBigW/5, eyePairBigY + eyePairBigH*1.7; ...
+        eyePairBigX + 4*eyePairBigW/5, eyePairBigY + eyePairBigH*1.7; ...
         eyePairBigX + eyePairBigW/2, eyePairBigY - eyePairBigH/2];
     videoFrame = insertMarker(videoFrame, [ExtrapolatedPoint(i,1,1) ExtrapolatedPoint(i,1,2)] , '+', 'Color', 'red');
     videoFrame = insertMarker(videoFrame, [ExtrapolatedPoint(i,2,1) ExtrapolatedPoint(i,2,2)], '+', 'Color', 'red');
@@ -247,10 +253,6 @@ for k = 1:numFaces
 
 %     actualPeaks = 25;
     
-    %%Initialize Optimization
-    flow0 = 65/60;
-    fhigh0 = 80/60;
-    
     flow = flow0;
     fhigh = fhigh0;
     %%Uncomment to optimize for the high-low frequnecies
@@ -352,7 +354,14 @@ for k = 1:numFaces
     [amp,freq] = max(abs(F(:,2:end)),[],2);
     ICA_post = f(freq+1)*60
     
-    [~,pulseInd] = max(amp);
+    range1 = find(ICA_post(:) > pulse_range(1));
+    range2 = find(ICA_post(:) < pulse_range(2));
+    range = intersect(range1, range2);
+    
+    pulse_mask = zeros(size(amp));
+    pulse_mask(range) = 1;
+    
+    [~,pulseInd] = max(amp.*pulse_mask);
     pulse = f(freq(pulseInd)+1)*60
     
 %     ICA_post1 = f(freq+1)*60;

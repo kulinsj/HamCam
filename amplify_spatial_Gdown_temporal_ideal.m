@@ -43,17 +43,17 @@ function amplify_spatial_Gdown_temporal_ideal(vidFile,outDir,alpha,level, ...
 
     open(vidOut)
 
-
+    disp('MIT-ing...');
     % compute Gaussian blur stack
-    disp('Spatial filtering...')
+%     disp('Spatial filtering...')
     Gdown_stack = build_GDown_stack(vidFile, startIndex, endIndex, level);
-    disp('Finished')
+%     disp('Finished')
     
     
     % Temporal filtering
-    disp('Temporal filtering...')
+%     disp('Temporal filtering...')
     filtered_stack = ideal_bandpassing(Gdown_stack, 1, fl, fh, samplingRate);
-    disp('Finished')
+%     disp('Finished')
     
     %% amplify
     filtered_stack(:,:,:,1) = filtered_stack(:,:,:,1) .* alpha;
@@ -63,7 +63,7 @@ function amplify_spatial_Gdown_temporal_ideal(vidFile,outDir,alpha,level, ...
 
 
     %% Render on the input video
-    disp('Rendering...')
+%     disp('Rendering...')
     % output video
     k = 0;
     for i=startIndex:endIndex

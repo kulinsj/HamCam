@@ -10,10 +10,11 @@ mkdir(resultsDir);
 % infileName = 'JoanneAudreyMultiFace4';
 % infileName = 'face';
 % infileName = 'eyebook';
-% infileName = 'JoanneSmall';
-infileName = 'janpostrun';
-% inFile = fullfile(dataDir,strcat(infileName,'.avi'));
-inFile = fullfile(dataDir,strcat(infileName,'.mp4'));
+infileName = 'JoanneSmall';
+% infileName = 'janpostrun';
+% infileName = 'audreybeforeBetter';
+inFile = fullfile(dataDir,strcat(infileName,'.avi'));
+% inFile = fullfile(dataDir,strcat(infileName,'.mp4'));
 outfile2 = fullfile(resultsDir,strcat(infileName,'Crop'));
 outfile3 = fullfile(resultsDir,strcat(infileName,'Demo'));
 
@@ -118,7 +119,7 @@ for k = 1:numFaces
     end
 
     [Loc, ind] = min(minDist);
-    ind(3) = 37;
+%     ind(3) = 37;
     points = points(ind);
     
 
@@ -229,8 +230,10 @@ for k = 1:numFaces
     
     %%Initialize Optimization
     alpha0 = 50;
-    flow0 = 40/60;
-    fhigh0 = 180/60;
+%     flow0 = 40/60;
+%     fhigh0 = 180/60;
+    flow0 = 70/60;
+    fhigh0 = 90/60;
     chromeAttn0 = 0;
     
     alpha = alpha0;
@@ -295,6 +298,7 @@ for k = 1:numFaces
     % ICA (assume 9 signals)
     addpath('./FastICA_2.5');
     sig = [mean_r(1,:); mean_r(2,:); mean_r(3,:); mean_g(1,:); mean_g(2,:); mean_g(3,:); mean_b(1,:); mean_b(2,:); mean_b(3,:)];
+%     sig = [mean_r(2,:); mean_r(3,:); mean_g(2,:); mean_g(3,:); mean_b(2,:); mean_b(3,:)];
 %     sig = [mean_r(1,:); mean_g(1,:); mean_b(1,:)];
     [decomp] = fastica(sig);
 %     [decomp] = jadeR(sig,3);
@@ -308,8 +312,12 @@ for k = 1:numFaces
     fps = 30;
     f = fps/size(F,2) * (0:floor(size(F,2)/2)-1);
     
-    [~,freq] = max(abs(F(:,2:end)),[],2);
+    [amp,freq] = max(abs(F(:,2:end)),[],2);
     ICA_post = f(freq+1)*60
+    
+    [~,pulseInd] = max(amp);
+    pulse = f(freq(pulseInd)+1)*60
+    
 %     ICA_post1 = f(freq+1)*60;
 %     
 %     

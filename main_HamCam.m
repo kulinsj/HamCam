@@ -6,14 +6,11 @@ dataDir = './data';
 resultsDir = 'Results';
 mkdir(resultsDir);
 
-% infileName = 'more_still_small';
-% infileName = 'JoanneAudreyMultiFace4';
 infileName = 'audreybeforeBetter';
-% infileName = 'eyebook';
 inFile = fullfile(dataDir,strcat(infileName,'.avi'));
 % inFile = fullfile(dataDir,strcat(infileName,'.mp4'));
+
 outfile2 = fullfile(resultsDir,strcat(infileName,'Crop'));
-outfile3 = fullfile(resultsDir,strcat(infileName,'Demo'));
 
 % Create a cascade detector object.
 faceDetector = vision.CascadeObjectDetector();
@@ -116,7 +113,7 @@ for k = 1:numFaces
     end
 
     [Loc, ind] = min(minDist);
-%     ind(3) = 38;
+    %     ind(3) = 38;
     points = points(ind);
     
 
@@ -240,30 +237,34 @@ for k = 1:numFaces
 %     actualPeaks = 25;
     
     %%Initialize Optimization
-    flow0 = 0.622;
-    fhigh0 = 1.6972;
+    flow0 = 65/60;
+    fhigh0 = 80/60;
     
-    x0 = [ flow0; fhigh0];
-    A = [ 1 0;
-        -1 0;
-        0 1;
-        0 -1;
-        1 -1];
-    b = [3; -0.4; 40; -0.62; -0.05];
+    flow = flow0;
+    fhigh = fhigh0;
+    %%Uncomment to optimize for the high-low frequnecies
+%     x0 = [ flow0; fhigh0];
+%     A = [ 1 0;
+%         -1 0;
+%         0 1;
+%         0 -1;
+%         1 -1];
+%     b = [3; -0.4; 40; -0.62; -0.05];
+%     
+%     options = optimoptions('fmincon');
+% %     options.MaxFunEvals = 40;
+%     options.DiffMinChange = 0.1;
+%     options.MaxIter = 2;
+%     options.Display = 'iter';
+%     
+%     
+%     X = fmincon(@(x) objectiveFunction(x, LEDlocs), x0, A, b, [], [],[],[],[],options);
+%     X
+%     alpha = 50;
+%     flow = X(1);
+%     fhigh = X(2);
     
-    options = optimoptions('fmincon');
-%     options.MaxFunEvals = 40;
-    options.DiffMinChange = 0.1;
-    options.MaxIter = 2;
-    options.Display = 'iter';
-    
-    
-    X = fmincon(@(x) objectiveFunction(x, LEDlocs), x0, A, b, [], [],[],[],[],options);
-    X
     alpha = 50;
-    flow = X(1);
-    fhigh = X(2);
-    
     for i = 1:numSamples+1
         %% Run MIT code on cropped video
         filename = strcat(strcat(strcat(infileName,'Crop'),num2str(i)),'.avi');
@@ -274,7 +275,11 @@ for k = 1:numFaces
     
     numPeaksG = zeros(numFaces, numSamples+1);
     pulseG = zeros(numFaces, numSamples+1);
+    mean_r = zeros(numSamples+1,numFrames);
+    mean_g = zeros(numSamples+1,numFrames);
+    mean_b = zeros(numSamples+1,numFrames);
     for i = 1:numSamples+1
+%         fig1 = figure('name',strcat('Processed heartbeat from sample ', num2str(i), ' for face', num2str(k)));
         G = zeros(1,numFrames);
         rangeString = strcat(num2str(flow),'-to-',num2str(fhigh));
         filename = strcat(infileName, 'Crop', num2str(i), '-ideal-from-',rangeString,'-alpha-',num2str(alpha),'-level-2-chromAtn-0.avi');
@@ -283,12 +288,21 @@ for k = 1:numFaces
         videoFileReader = vision.VideoFileReader(inFile_Processed);
         videoFrame = step(videoFileReader);
         frame = 1;
+
         G(frame) = mean(mean(videoFrame(:,:,1)));
         
+        mean_r(i,frame) = mean(mean(videoFrame(:,:,1)));
+        mean_g(i,frame) = mean(mean(videoFrame(:,:,2)));
+        mean_b(i,frame) = mean(mean(videoFrame(:,:,3)));
+
         while ~isDone(videoFileReader)
             videoFrame = step(videoFileReader);
             frame = frame+1;
             G(frame) = mean(mean(videoFrame(:,:,1)));
+            
+            mean_r(i,frame) = mean(mean(videoFrame(:,:,1)));
+            mean_g(i,frame) = mean(mean(videoFrame(:,:,2)));
+            mean_b(i,frame) = mean(mean(videoFrame(:,:,3)));
         end
         G = G(1:find(G,1,'last')); %trim zeros
         G = filter(ones(1,7)/7,1,G); %smooth
@@ -303,12 +317,75 @@ for k = 1:numFaces
         numPeaksG(k,i) = size(peaks,2);
         pulseG(k,i) = size(peaks,2)*60*30/size(G,2);
     end
+    mean_r = mean_r(1:numSamples,:);
+    mean_g = mean_g(1:numSamples,:);
+    mean_b = mean_b(1:numSamples,:);
+    
+    % ICA (assume 9 signals)
+    addpath('./FastICA_2.5');
+    sig = [mean_r(1,:); mean_r(2,:); mean_r(3,:); mean_g(1,:); mean_g(2,:); mean_g(3,:); mean_b(1,:); mean_b(2,:); mean_b(3,:)];
+%     sig = [mean_r(1,:); mean_g(1,:); mean_b(1,:)];
+    [decomp] = fastica(sig);
+%     [decomp] = jadeR(sig,3);
+%     decomp = decomp*sig;
+    
+    F = fft(decomp,[],2);
+    
+    figure;
+    plot(1:(size(F,2)-1),abs(F(:,2:end)));
+    
+    fps = 30;
+    f = fps/size(F,2) * (0:floor(size(F,2)/2)-1);
+    
+    [~,freq] = max(abs(F(:,2:end)),[],2);
+    ICA_post = f(freq+1)*60
+%     ICA_post1 = f(freq+1)*60;
+%     
+%     
+%     
+%     sig = [mean_r(2,:); mean_g(2,:); mean_b(2,:)];
+%     [decomp] = fastica(sig);
+%     
+%     F = fft(decomp,[],2);
+%     
+%     figure;
+%     plot(1:(size(F,2)-1),abs(F(:,2:end)));
+%     
+%     fps = 30;
+%     f = fps/size(F,2) * (0:floor(size(F,2)/2)-1);
+%     
+%     [~,freq] = max(abs(F(:,2:end)),[],2);
+%     ICA_post2 = f(freq+1)*60;
+%     
+%     
+%     
+%     sig = [mean_r(3,:); mean_g(3,:); mean_b(3,:)];
+%     [decomp] = fastica(sig);
+%     
+%     F = fft(decomp,[],2);
+%     
+%     figure;
+%     plot(1:(size(F,2)-1),abs(F(:,2:end)));
+%     
+%     fps = 30;
+%     f = fps/size(F,2) * (0:floor(size(F,2)/2)-1);
+%     
+%     [~,freq] = max(abs(F(:,2:end)),[],2);
+%     ICA_post3 = f(freq+1)*60;
+% 
+%     ICA_post = [ICA_post1; ICA_post2; ICA_post3]
+    
+
     numPeaksG
     pulseG
-    for j = 1:numSamples
-       figure('name',strcat('Unaltered intensity for point ', num2str(j)));
-       plot(original(j,:));
-       ylim([0, 1]);
-       xlim([0 500]);
-    end
+    figure;
+    plot(redLED);
+    ylim([0, 1]);
+    xlim([0 500]);
+%     for j = 1:numSamples
+%        figure('name',strcat('Unaltered intensity for point ', num2str(j)));
+%        plot(original(j,:));
+%        ylim([0, 1]);
+%        xlim([0 500]);
+%     end
 end

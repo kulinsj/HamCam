@@ -89,15 +89,11 @@ numPoints = size(ExtrapolatedPoint,2);
 % (1,2,2) = face1, point2, y
 % ...
 % (3,3,1) = face3, point3, x
- 
-% videoFrame = insertMarker(videoFrame, [274 898], '+', 'Color', 'green');
 
 figure; imshow(videoFrame); title('Detected Stuff');
 
 for k = 1:numFaces
     if k > 1
-% %         inFile = fullfile(dataDir,strcat(infileName,'.avi'));
-%         inFile = fullfile(dataDir,strcat(infileName,'.mp4'));
         videoFileReader = vision.VideoFileReader(inFile);
         videoFrame = step(videoFileReader);
         imshow(videoFrame);
@@ -230,32 +226,24 @@ for k = 1:numFaces
     for i = 1:numSamples+1
         close(Crop(i));
     end
-
+    
+    %%Initialize Optimization
+    alpha0 = 50;
+    flow0 = 40/60;
+    fhigh0 = 180/60;
+    chromeAttn0 = 0;
+    
+    alpha = alpha0;
+    flow = flow0;
+    fhigh = fhigh0;
+    chromeAttn = chromeAttn0;
+    
     for i = 1:numSamples+1
         %% Run MIT code on cropped video
-        %inFile = fullfile(dataDir,'JoanneSmallCrop.avi');
-        
         filename = strcat(strcat(strcat(infileName,'Crop'),num2str(i)),'.avi');
         inFile_Sample = fullfile(resultsDir,filename);
-        fprintf('face %i, sample %i, filter %i of %i\n', k, i, 1, 1);
-%         amplify_spatial_Gdown_temporal_ideal(inFile_Sample,resultsDir,50,1,40/60,180/60,30, 0);
-
-        % Resting heart rate band
-        amplify_spatial_Gdown_temporal_ideal(inFile_Sample,resultsDir,100,1,120/60,140/60,30, 0);
-%         fprintf('face %i, sample %i, filter %i of %i\n', k, i, 2, 8);
-%         amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,50/60,60/60,30, 0);
-%         fprintf('face %i, sample %i, filter %i of %i\n', k, i, 3, 8);
-%         amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,60/60,70/60,30, 0);
-%         fprintf('face %i, sample %i, filter %i of %i\n', k, i, 4, 8);
-%         amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,70/60,80/60,30, 0);
-%         fprintf('face %i, sample %i, filter %i of %i\n', k, i, 5, 8);
-%         amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,80/60,90/60,30, 0);
-%         fprintf('face %i, sample %i, filter %i of %i\n', k, i, 6, 8);
-%         amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,90/60,100/60,30, 0);
-%         fprintf('face %i, sample %i, filter %i of %i\n', k, i, 7, 8);
-%         amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,100/60,110/60,30, 0);
-%         fprintf('face %i, sample %i, filter %i of %i\n', k, i, 8, 8);
-%         amplify_spatial_Gdown_temporal_ideal(inFile,resultsDir,50,1,110/60,120/60,30, 0);
+        fprintf('face %i of %i, sample %i of %i, filter %i of %i\n', k, numFaces, i, numSamples+1 , 1, 1);
+        amplify_spatial_Gdown_temporal_ideal(inFile_Sample,resultsDir,alpha,2,flow,fhigh,30, chromeAttn);
     end
     
     
@@ -267,11 +255,8 @@ for k = 1:numFaces
     for i = 1:numSamples+1
 %         fig1 = figure('name',strcat('Processed heartbeat from sample ', num2str(i), ' for face', num2str(k)));
         G = zeros(1,numFrames);
-%         rangeString = '0.66667-to-3';
-    rangeString = '2-to-2.3333';
-        colArray = [1 0 0];
-%         filename = strcat(strcat(strcat(infileName,'Crop'),num2str(i)),'-ideal-from-',rangeString,'-alpha-50-level-1-chromAtn-0.avi');
-        filename = strcat(strcat(strcat(infileName,'Crop'),num2str(i)),'-ideal-from-',rangeString,'-alpha-100-level-1-chromAtn-0.avi');
+        rangeString = strcat(num2str(flow),'-to-',num2str(fhigh));
+        filename = strcat(infileName, 'Crop', num2str(i), '-ideal-from-',rangeString,'-alpha-',num2str(alpha),'-level-2-chromAtn-',num2str(chromeAttn),'.avi');
         inFile_Processed = fullfile(resultsDir,filename);
 
         videoFileReader = vision.VideoFileReader(inFile_Processed);
@@ -293,15 +278,15 @@ for k = 1:numFaces
             mean_b(i,frame) = mean(mean(videoFrame(:,:,3)));
         end
         G = G(1:find(G,1,'last'));
-        plot(1:size(G,2),G(:),'color',colArray);
+        plot(1:size(G,2),G(:),'color',[1 0 0]);
 
         hold on;
         ylim([0, 1]);
 %         legend('40 to 60');
-        [peaks, locs] = findpeaks(G,'MINPEAKDISTANCE',10);
+        [peaks, locs] = findpeaks(G,'MINPEAKDISTANCE',10, 'THRESHOLD', var(G));
         scatter(locs, G(locs));
         numPeaks(k,i) = size(peaks,2);
-        pulse(k,i) = size(peaks,2)*60*30/numFrames;
+        pulse(k,i) = size(peaks,2)*60*30/size(G,2);
     end
     mean_r = mean_r(1:numSamples,:);
     mean_g = mean_g(1:numSamples,:);

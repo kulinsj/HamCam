@@ -70,8 +70,8 @@ for i = 1:numFaces
     pairEyeBoxBigPoly = [eyePairBigX, eyePairBigY, eyePairBigX+eyePairBigW, eyePairBigY, eyePairBigX+eyePairBigW, eyePairBigY+eyePairBigH, eyePairBigX, eyePairBigY+eyePairBigH];
     videoFrame = insertShape(videoFrame, 'Polygon', pairEyeBoxBigPoly, 'Color', [1,0,1]);
     
-    ExtrapolatedPoint(i,1:3,1:2) = [eyePairBigX + eyePairBigW/4, eyePairBigY + eyePairBigH*2; ...
-        eyePairBigX + 3*eyePairBigW/4, eyePairBigY + eyePairBigH*2; ...
+    ExtrapolatedPoint(i,1:3,1:2) = [eyePairBigX + eyePairBigW/4, eyePairBigY + eyePairBigH*1.2; ...
+        eyePairBigX + 3*eyePairBigW/4, eyePairBigY + eyePairBigH*1.2; ...
         eyePairBigX + eyePairBigW/2, eyePairBigY - eyePairBigH/2];
     videoFrame = insertMarker(videoFrame, [ExtrapolatedPoint(i,1,1) ExtrapolatedPoint(i,1,2)] , '+', 'Color', 'red');
     videoFrame = insertMarker(videoFrame, [ExtrapolatedPoint(i,2,1) ExtrapolatedPoint(i,2,2)], '+', 'Color', 'red');
@@ -109,22 +109,33 @@ for k = 1:numFaces
     minDist = zeros(size(points,1),size(ExtrapolatedPoint,2));
     
     for i = 1:size(points,1)
-        currentLoc = points(i).Location;
-        minDist(i,1) = pdist([currentLoc; ExtrapolatedPoint(k,1,1) ExtrapolatedPoint(k,1,2)]);
+        currentLoc = points(i).Location; %loops through each of the detected points
+        minDist(i,1) = pdist([currentLoc; ExtrapolatedPoint(k,1,1) ExtrapolatedPoint(k,1,2)]); %[x-current, y-current; extrapolated-x, extrapolated-y], ; separates the row
         minDist(i,2) = pdist([currentLoc; ExtrapolatedPoint(k,2,1) ExtrapolatedPoint(k,2,2)]);
         minDist(i,3) = pdist([currentLoc; ExtrapolatedPoint(k,3,1) ExtrapolatedPoint(k,3,2)]);   
     end
 
     [Loc, ind] = min(minDist);
+    
+    
     %     ind(3) = 38;
     points = points(ind);
     
+    %save vectors for distance between corner point and desired
+    %extrapolated point
+    
+    %cornerpoint fun 
+    p1= points(1).Location;%points is a cornerPoints object, so you must use this syntax to get the coordinates
+    p2= points(2).Location;
+    p3= points(3).Location;
+    
+    cropvectors(1,:) = [ExtrapolatedPoint(k,1,1),ExtrapolatedPoint(k,1,2)]-p1; %calculate the vector distance between ideal point and tracked cornerPoint
+    cropvectors(2,:) = [ExtrapolatedPoint(k,2,1),ExtrapolatedPoint(k,2,2)]-p2;
+    cropvectors(3,:) = [ExtrapolatedPoint(k,3,1),ExtrapolatedPoint(k,3,2)]-p3; 
 
     %Display the detected points.
     figure; imshow(videoFrame), hold on, title('Detected features');
     plot(points);
-
-
 
     % Create a point tracker and enable the bidirectional error constraint to
     % make it more robust in the presence of noise and clutter.
@@ -193,7 +204,7 @@ for k = 1:numFaces
             %Crop the frame around the tracked points
             for j = 1:numSamples
                 original(j,frame-1) = mean(videoFrame(round(MyPoints(j,1)), round(MyPoints(j,2)), :));
-                CropFrame = imcrop(videoFrame, [(MyPoints(j,1)-5) (MyPoints(j,2)-5) 11 11]);
+                CropFrame = imcrop(videoFrame, [(MyPoints(j,1)-cropvectors(j,1)-5) (MyPoints(j,2)-cropvectors(j,2)-5) 11 11]); %crop patch
                 writeVideo(Crop(j), CropFrame);
             end
             CropFrame = imcrop(videoFrame, [5 5 11 11]);

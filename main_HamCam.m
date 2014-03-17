@@ -339,7 +339,7 @@ for k = 1:numFaces
     sig = [mean_r(1,:); mean_r(2,:); mean_r(3,:); mean_g(1,:); mean_g(2,:); mean_g(3,:); mean_b(1,:); mean_b(2,:); mean_b(3,:)];
 %     sig = [mean_r(2,:); mean_r(3,:); mean_g(2,:); mean_g(3,:); mean_b(2,:); mean_b(3,:)];
 %     sig = [mean_r(1,:); mean_g(1,:); mean_b(1,:)];
-    [decomp] = fastica(sig);
+    [decomp] = fastica(sig,'verbose', 'off');
 %     [decomp] = jadeR(sig,3);
 %     decomp = decomp*sig;
     

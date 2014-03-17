@@ -43,7 +43,7 @@ function amplify_spatial_Gdown_temporal_ideal(vidFile,outDir,alpha,level, ...
 
     open(vidOut)
 
-    disp('MIT-ing...');
+%     disp('MIT-ing...');
     % compute Gaussian blur stack
 %     disp('Spatial filtering...')
     Gdown_stack = build_GDown_stack(vidFile, startIndex, endIndex, level);

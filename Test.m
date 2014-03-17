@@ -9,7 +9,8 @@ hOffset = 1.7;
 rangeRadius = 15;
 Results = zeros(8,2);
 for i = 1:8
-   fprintf('TEST: on %i of 8', i);
+   fprintf('----------------------');
+   fprintf('TEST: on %i of 8 \n', i);
    switch i
        case 1
            infile = 'audreybeforeBetter';
@@ -65,11 +66,13 @@ for i = 1:8
    [Results(i,1), Results(i,2)] = HamCam(infile, LEDX, LEDY, validationMinPeakDist, expected, rangeRadius, hOffset);
 end
 Results
-error = zeros(8,2);
+errorActual = zeros(1,8);
+errorPercent = cell(1,8);
 for i = 1:8
-    error(i,1) = Results(i,2) - Results(i,1);
-    error(i,2) = abs(error(i,1))/Results(i,1);
+    errorActual(i) = Results(i,2) - Results(i,1);
+    errorPercent{i} = strcat(num2str(round(10*abs(errorActual(i))*100/Results(i,1))/10),'%');
 end
-error
-TotalError = sum(error(:,1))
-ErrorVariance = var(error(:,1))
+errorActual
+errorPercent
+TotalError = sum(errorActual)
+ErrorVariance = var(errorActual)

@@ -6,7 +6,7 @@ dataDir = './data';
 resultsDir = 'Results';
 hOffset = 1.7;
 
-rangeRadius = 15;
+rangeRadius = 25;
 Results = zeros(8,2);
 for i = 1:8
    fprintf('----------------------');
@@ -74,5 +74,5 @@ for i = 1:8
 end
 errorActual
 errorPercent
-TotalError = sum(errorActual)
-ErrorVariance = var(errorActual)
+TotalError = sum(abs(errorActual))
+ErrorVariance = var(abs(errorActual))
